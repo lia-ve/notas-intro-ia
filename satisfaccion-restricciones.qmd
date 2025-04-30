@@ -1,0 +1,53 @@
+# Satisfacción de Restricciones
+
+En la nota anterior, aprendimos cómo encontrar soluciones óptimas para problemas de búsqueda, un tipo de problema de planificación. Ahora, aprenderemos sobre una clase relacionada de problemas: los **Problemas de Satisfacción de Restricciones** (CSP, del inglés **C**onstraint **S**atisfaction **P**roblems). A diferencia de los problemas de búsqueda, los CSP son un tipo de **problema de identificación**, en los cuales simplemente debemos determinar si un estado es un estado objetivo o no, sin preocuparnos por cómo llegamos a ese objetivo. Los CSP se definen mediante tres factores:
+
+- **Variables**: Los CSP poseen un conjunto de $N$ variables $X_1, \dots, X_N$, cada una de las cuales puede tomar un único valor de un conjunto definido.
+- **Dominio**: Un conjunto $\{x_1, \dots, x_d\}$ que representa todos los posibles valores que una variable del CSP puede tomar.
+- **Restricciones**: Las restricciones definen limitaciones sobre los valores de las variables, posiblemente en relación con otras variables.
+
+## Ejemplo: N-reinas
+
+Consideremos el problema de identificación de las **$N$-reinas**: dado un tablero de ajedrez de tamaño $N \times N$, ¿podemos encontrar una configuración en la que colocar $N$ reinas en el tablero de tal manera que ninguna reina pueda atacar a otra?
+
+Podemos formular este problema como un CSP de la siguiente manera:
+
+### Variables
+
+- $X_{ij}$. donde $0 \leq i, j < N$  Cada $X_{ij}$ representa una posición en la cuadrícula del tablero $N \times N$. con $i$ y $j$ especificando el número de fila y columna respectivamente.
+
+### Dominio
+
+- $\{0, 1\}$  Cada $X_{ij}$ puede tomar uno de dos valores: 0 o 1, representando la ausencia o presencia de una reina en la posición $(i, j)$ en el tablero.
+
+### Restricciones
+
+1. $\forall i,j,k :: (X_{ij}, X_{ik}) \in \{(0, 0), (0, 1), (1, 0)\}$.  Esta restricción establece que si dos variables tienen el mismo índice $i$ (misma fila), solo una de ellas puede tener el valor 1. Esto encapsula la condición de que no puede haber dos reinas en la misma fila.
+2. $\forall i,j,k :: (X_{ij}, X_{kj}) \in \{(0, 0), (0, 1), (1, 0)\}$.  De manera similar a la restricción anterior, esta indica que si dos variables tienen el mismo índice $j$ (misma columna), solo una de ellas puede tener el valor 1, asegurando que no haya dos reinas en la misma columna.
+3. $\forall i,j,k :: (X_{ij}, X_{i+k,j+k}) \in \{(0, 0), (0, 1), (1, 0)\}$.  Con razonamiento similar, esta restricción y la siguiente representan las condiciones de que no puede haber dos reinas en la misma diagonal principal o secundaria, respectivamente.
+4. $\forall i,j,k :: (X_{ij}, X_{i+k,j-k}) \in \{(0, 0), (0, 1), (1, 0)\}$.
+5. $\sum_{i,j} X_{ij} = N$. Esta restricción indica que deben haber exactamente $N$ posiciones marcadas con un 1, lo que captura el requisito de que debe haber exactamente $N$ reinas en el tablero.
+
+Los problemas de satisfacción de restricciones son **NP-duros**, lo que significa, de forma aproximada, que no existe un algoritmo conocido para encontrar soluciones en tiempo polinomial. Dado un problema con $N$ variables, cada una con un dominio de tamaño $O(d)$, existen $O(d^N)$ posibles asignaciones, lo cual es exponencial en el número de variables. 
+
+Sin embargo, a menudo podemos evitar este obstáculo formulando los CSP como problemas de búsqueda, definiendo estados como **asignaciones parciales** (asignaciones de variables en las que algunas variables han sido asignadas mientras que otras no). En consecuencia, la función sucesora para un estado CSP genera todos los estados con una nueva variable asignada, y la prueba de objetivo verifica que todas las variables estén asignadas y que todas las restricciones se cumplan en el estado evaluado. Los problemas de satisfacción de restricciones tienden a tener una estructura significativamente más rica que los problemas de búsqueda tradicionales, y podemos aprovechar esta estructura combinando la formulación mencionada con heurísticas apropiadas para encontrar soluciones en un tiempo factible.
+
+---
+
+## Gráficos de Restricciones
+
+Introduzcamos un segundo ejemplo de CSP: la **coloración de mapas**. Este problema consiste en colorear un mapa dado un conjunto de colores, de modo que ninguna región o estado adyacente tenga el mismo color.
+
+Los problemas de satisfacción de restricciones a menudo se representan como **gráficos de restricciones**, donde los nodos representan variables y las aristas representan restricciones entre ellas. Existen varios tipos de restricciones, y cada una se maneja de manera ligeramente diferente:
+
+- **Restricciones unarias**: Involucran una sola variable en el CSP. No se representan en los gráficos de restricciones; en su lugar, se utilizan para recortar el dominio de la variable que restringen cuando es necesario.
+- **Restricciones binarias**: Involucran dos variables. Se representan en los gráficos de restricciones como aristas tradicionales.
+- **Restricciones de orden superior**: Las restricciones que involucran tres o más variables también pueden representarse con aristas en un gráfico CSP, aunque su apariencia puede ser algo inusual.
+
+Consideremos el problema de colorear el mapa de Australia:
+
+Las restricciones en este problema son simplemente que ningún par de estados adyacentes puede tener el mismo color. Como resultado, dibujando una arista entre cada par de estados adyacentes, podemos generar el **gráfico de restricciones** para la coloración del mapa de Australia como sigue:
+
+El valor de los gráficos de restricciones radica en que podemos usarlos para extraer información valiosa sobre la estructura de los CSP que estamos resolviendo. Al analizar el gráfico de un CSP, podemos determinar aspectos como si está escasamente o densamente conectado/restringido, y si tiene una estructura en forma de árbol o no. Cubriremos esto con más detalle a medida que discutamos la resolución de problemas de satisfacción de restricciones en mayor profundidad.
+
+--- 

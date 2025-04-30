@@ -1,0 +1,138 @@
+# Búsqueda Informada
+
+La **búsqueda de costo uniforme (UCS)** es una técnica útil porque es completa y óptima, pero puede ser relativamente lenta debido a que expande en todas las direcciones desde el estado inicial mientras busca un objetivo. Si tenemos alguna noción sobre la dirección en la que deberíamos enfocar nuestra búsqueda, podemos mejorar significativamente el rendimiento y "converger" hacia un objetivo mucho más rápidamente. Este es precisamente el enfoque de la **búsqueda informada**.
+
+---
+
+## Heurísticas
+
+Las **heurísticas** son la fuerza impulsora que permite estimar la distancia hacia los estados objetivo. Son funciones que toman un estado como entrada y devuelven una estimación de la distancia al objetivo. El cálculo realizado por estas funciones es específico para el problema de búsqueda que se está resolviendo. Por razones que veremos en la **búsqueda A***, generalmente queremos que las funciones heurísticas sean una cota inferior de la distancia restante al objetivo. Por lo tanto, las heurísticas suelen ser soluciones a problemas **relajados** (donde algunas restricciones del problema original se han eliminado).
+
+Tomemos nuestro ejemplo de Pacman y consideremos el problema de navegación descrito anteriormente. Una heurística común utilizada para resolver este problema es la **distancia de Manhattan**, que para dos puntos $(x_1, y_1)$ y $(x_2, y_2)$ se define como:
+
+$$
+\text{Manhattan}(x_1, y_1, x_2, y_2) = |x_1 - x_2| + |y_1 - y_2|
+$$
+
+La visualización anterior muestra el problema relajado que la distancia de Manhattan ayuda a resolver: asumiendo que Pacman desea llegar a la esquina inferior izquierda del laberinto, calcula la distancia desde la ubicación actual de Pacman hasta su ubicación deseada, suponiendo que no hay paredes en el laberinto. Esta distancia es la distancia exacta al objetivo en el problema de búsqueda relajado y, en consecuencia, la distancia estimada al objetivo en el problema de búsqueda real.
+
+Con las heurísticas, se vuelve muy fácil implementar lógica en nuestro agente que le permita "preferir" expandir estados que se estiman más cercanos a los estados objetivo cuando decide qué acción realizar. Este concepto de preferencia es muy poderoso y es utilizado por los siguientes dos algoritmos de búsqueda que implementan funciones heurísticas: **búsqueda voraz** y **búsqueda A* **.
+
+
+## Búsqueda Voraz
+
+### Descripción
+
+La **búsqueda voraz** es una estrategia de exploración que siempre selecciona el nodo fronterizo con el valor heurístico más bajo para su expansión, lo que corresponde al estado que cree que está más cerca de un objetivo.
+
+### Representación de la Frontera
+
+La búsqueda voraz opera de manera idéntica a UCS, utilizando una cola de prioridad para representar la frontera. La diferencia radica en que, en lugar de usar el costo hacia atrás acumulado (la suma de los pesos de las aristas en el camino al estado) para asignar prioridad, la búsqueda voraz utiliza el costo hacia adelante estimado en forma de valores heurísticos.
+
+### Completitud y Optimalidad
+
+La búsqueda voraz no garantiza encontrar un estado objetivo si existe uno, ni es óptima, especialmente en casos donde se selecciona una función heurística muy deficiente. Generalmente actúa de manera bastante impredecible de un escenario a otro, y puede variar desde ir directamente a un estado objetivo hasta comportarse como una búsqueda en profundidad mal guiada y explorar áreas incorrectas.
+
+---
+
+## Búsqueda A*
+
+### Descripción
+
+La **búsqueda A*** es una estrategia de exploración que siempre selecciona el nodo fronterizo con el costo total estimado más bajo para su expansión, donde el costo total es el costo completo desde el nodo inicial hasta el nodo objetivo.
+
+### Representación de la Frontera
+
+Al igual que la búsqueda voraz y UCS, la búsqueda A* también utiliza una cola de prioridad para representar su frontera. De nuevo, la única diferencia radica en el método de selección de prioridad. A* combina el costo total hacia atrás (suma de los pesos de las aristas en el camino al estado) utilizado por UCS con el costo hacia adelante estimado (valor heurístico) utilizado por la búsqueda voraz, sumando estos dos valores para obtener un costo total estimado desde el inicio hasta el objetivo. Dado que queremos minimizar el costo total desde el inicio hasta el objetivo, esta es una excelente elección.
+
+### Completitud y Optimalidad
+
+La búsqueda A* es completa y óptima, siempre que se utilice una heurística adecuada (que cubriremos en breve). Es una combinación de lo mejor de todas las estrategias de búsqueda que hemos discutido hasta ahora, incorporando la alta velocidad general de la búsqueda voraz con la optimalidad y completitud de UCS.
+
+---
+
+## Admisibilidad
+
+Ahora que hemos discutido las heurísticas y cómo se aplican en la búsqueda voraz y A*, dediquemos un tiempo a analizar qué constituye una buena heurística. Para hacerlo, primero reformulemos los métodos utilizados para determinar el orden de la cola de prioridad en UCS, búsqueda voraz y A* con las siguientes definiciones:
+
+- $g(n)$: La función que representa el costo total hacia atrás calculado por UCS.
+- $h(n)$: La función de valor heurístico, o costo hacia adelante estimado, utilizada por la búsqueda voraz.
+- $f(n)$: La función que representa el costo total estimado, utilizada por A\*. $f(n) = g(n) + h(n)$.
+
+Antes de abordar la pregunta de qué constituye una "buena" heurística, debemos responder si A\* mantiene sus propiedades de completitud y optimalidad independientemente de la función heurística que utilicemos. De hecho, es muy fácil encontrar heurísticas que rompan estas dos propiedades codiciadas. Por ejemplo, considere la función heurística $h(n) = 1 - g(n)$. Independientemente del problema de búsqueda, usar esta heurística produce:
+
+$$
+f(n) = g(n) + h(n) = g(n) + (1 - g(n)) = 1
+$$
+
+Por lo tanto, dicha heurística reduce la búsqueda A* a BFS, donde todos los costos de las aristas son equivalentes. Como ya hemos demostrado, BFS no está garantizado para ser óptimo en el caso general donde los pesos de las aristas no son constantes.
+
+La condición requerida para la optimalidad al usar la búsqueda A* en árbol se conoce como **admisibilidad**. La restricción de admisibilidad establece que el valor estimado por una heurística admisible no es negativo ni una sobreestimación. Definamos $h^*(n)$ como el verdadero costo óptimo hacia adelante para alcanzar un estado objetivo desde un nodo dado $n$. Podemos formular matemáticamente la restricción de admisibilidad de la siguiente manera:
+
+$$
+\forall n, \quad 0 \leq h(n) \leq h^*(n)
+$$
+
+### Teorema
+
+Para un problema de búsqueda dado, si la restricción de admisibilidad es satisfecha por una función heurística $h$, usar la búsqueda A* en árbol con $h$ en ese problema de búsqueda producirá una solución óptima.
+
+### Prueba
+
+Supongamos que dos estados objetivo alcanzables están ubicados en el árbol de búsqueda para un problema de búsqueda dado: un objetivo óptimo $A$ y un objetivo subóptimo $B$. Algún ancestro $n$ de $A$ (incluyendo quizás a $A$ mismo) debe estar actualmente en la frontera, ya que $A$ es alcanzable desde el estado inicial. Afirmamos que $n$ será seleccionado para expansión antes que $B$, utilizando las siguientes tres afirmaciones:
+
+1. $g(A) < g(B)$. Dado que $A$ es óptimo y $B$ es subóptimo, podemos concluir que $A$ tiene un menor costo hacia atrás hasta el estado inicial que $B$.
+2. $h(A) = h(B) = 0$, porque se nos da que nuestra heurística satisface la restricción de admisibilidad. Dado que tanto $A$ como $B$ son estados objetivo, el verdadero costo óptimo hacia un estado objetivo desde $A$ o $B$ es simplemente $h^*(n) = 0$; por lo tanto, $0 \leq h(n) \leq 0$.
+3. $f(n) \leq f(A)$, porque, a través de la admisibilidad de $h$, $f(n) = g(n) + h(n) \leq g(n) + h^*(n) = g(A) = f(A)$. El costo total a través del nodo $n$ es como máximo el verdadero costo hacia atrás de $A$, que también es el costo total de $A$.
+
+Podemos combinar las afirmaciones 1 y 2 para concluir que $f(A) < f(B)$ de la siguiente manera:
+
+$$
+f(A) = g(A) + h(A) = g(A) < g(B) = g(B) + h(B) = f(B)
+$$
+
+Una consecuencia simple de combinar la desigualdad derivada anteriormente con la afirmación 3 es la siguiente:
+
+$$
+f(n) \leq f(A) \land f(A) < f(B) \rightarrow f(n) < f(B)
+$$
+
+Por lo tanto, podemos concluir que $n$ se expandirá antes que $B$. Dado que hemos probado esto para un $n$ arbitrario, podemos concluir que todos los ancestros de $A$ (incluyendo a $A$ mismo) se expandirán antes que $B$.
+
+Un problema que encontramos anteriormente con la búsqueda en árbol fue que, en algunos casos, podría fallar al encontrar una solución, quedándose atrapado buscando el mismo ciclo en el grafo del espacio de estados infinitamente. Incluso en situaciones donde nuestra técnica de búsqueda no involucra dicho bucle infinito, a menudo ocurre que visitamos el mismo nodo varias veces porque hay múltiples formas de llegar a ese mismo nodo. Esto lleva a una cantidad exponencialmente mayor de trabajo, y la solución natural es simplemente llevar un registro de los estados que ya has expandido y nunca volver a expandirlos. Más explícitamente, mantén un conjunto de nodos "alcanzados" mientras utilizas tu método de búsqueda de elección. Luego, asegúrate de que cada nodo no esté ya en el conjunto antes de expandirlo y agrégalo al conjunto después de la expansión si no lo está. La búsqueda en árbol con esta optimización añadida se conoce como **búsqueda en grafo**.
+
+Además, hay un factor clave adicional que es necesario para mantener la optimalidad. Considera el siguiente grafo de espacio de estados simple y el árbol de búsqueda correspondiente, anotado con pesos y valores heurísticos:
+
+En el ejemplo anterior, es claro que la ruta óptima es seguir $S \to A \to C \to G$, obteniendo un costo total de $1 + 1 + 3 = 5$. La única otra ruta hacia el objetivo, $S \to B \to C \to G$, tiene un costo de $1 + 2 + 3 = 6$. Sin embargo, debido a que el valor heurístico del nodo $A$ es mucho mayor que el valor heurístico del nodo $B$, el nodo $C$ se expande primero a lo largo de la segunda ruta subóptima como hijo de $B$. Luego, se coloca en el conjunto de nodos "alcanzados", y así la búsqueda A* en grafo falla en reexpandirlo cuando lo visita como hijo de $A$, nunca encontrando la solución óptima. Por lo tanto, para mantener la optimalidad en la búsqueda A* en grafo, no solo necesitamos verificar si A* ya ha visitado un nodo, sino también si ha encontrado un camino más barato hacia él.
+
+```rust
+function A*-GRAPH-SEARCH(problem, frontier) return a solution or failure
+    reached ← an empty dict mapping nodes to the cost to each one
+    frontier ← INSERT((MAKE-NODE(INITIAL-STATE[problem]),0), frontier)
+    while not IS-EMPTY(frontier) do
+        node, node.CostToNode ← POP(frontier)
+        if problem.IS-GOAL(node.STATE) then return node
+        if node.STATE is not in reached or reached[node.STATE] > node.CostToNode then
+            reached[node.STATE] = node.CostToNode
+            for each child-node in EXPAND(problem, node) do
+                frontier ← INSERT((child-node, child-node.COST + CostToNode), frontier)
+    return failure
+```
+
+Es importante destacar que, en la implementación, es crucial almacenar el conjunto de nodos alcanzados como un conjunto disjunto y no como una lista. Almacenarlo como una lista requiere operaciones de costo $O(n)$ para verificar la pertenencia, lo que elimina la mejora de rendimiento que la búsqueda en grafo pretende proporcionar.
+
+Algunos puntos importantes de la discusión anterior antes de continuar: para que las heurísticas admisibles sean válidas, por definición debe ser el caso que $h(G) = 0$ para cualquier estado objetivo $G$.
+
+---
+
+## Dominancia
+
+Ahora que hemos establecido la propiedad de admisibilidad y su papel en mantener la optimalidad de la búsqueda A*, podemos regresar a nuestro problema original de crear heurísticas "buenas" y cómo determinar si una heurística es mejor que otra. La métrica estándar para esto es la de **dominancia**. Si una heurística $a$ domina a una heurística $b$, entonces la distancia al objetivo estimada por $a$ es mayor o igual a la distancia al objetivo estimada por $b$ para cada nodo en el grafo del espacio de estados. Matemáticamente:
+
+$$
+\forall n: h_a(n) \geq h_b(n)
+$$
+
+La dominancia captura intuitivamente la idea de que una heurística es mejor que otra: si una heurística admisible domina a otra, debe ser mejor porque siempre estimará más de cerca la distancia al objetivo desde cualquier estado dado. Además, la **heurística trivial** se define como $h(n) = 0$, y usarla reduce la búsqueda A* a UCS. Todas las heurísticas admisibles dominan la heurística trivial. La heurística trivial a menudo se incorpora en la base de un **semirretículo** para un problema de búsqueda, una jerarquía de dominancia de la cual está ubicada en la parte inferior. A continuación se muestra un ejemplo de un semirretículo que incorpora varias heurísticas $h_a$, $h_b$ y $h_c$ que van desde la heurística trivial en la parte inferior hasta la distancia exacta al objetivo en la parte superior:
+
+Como regla general, la función max aplicada a múltiples heurísticas admisibles siempre será admisible. Esto es simplemente una consecuencia de que todos los valores generados por las heurísticas para cualquier estado dado están restringidos por la condición de admisibilidad, $0 \leq h(n) \leq h^*(n)$. El máximo de números en este rango también debe caer dentro del mismo rango. Es una práctica común generar múltiples heurísticas admisibles para cualquier problema de búsqueda dado y calcular el máximo sobre los valores generados por ellas para producir una heurística que domine (y, por lo tanto, sea mejor que) todas ellas individualmente.

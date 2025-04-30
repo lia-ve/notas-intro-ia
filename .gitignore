@@ -172,3 +172,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+ # quarto stuff
+/.quarto/
+*_files/
+_book/

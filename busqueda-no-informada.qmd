@@ -1,0 +1,123 @@
+# Búsqueda No Informada
+
+El protocolo estándar para encontrar un plan que nos lleve desde el estado inicial hasta un estado objetivo consiste en mantener una **frontera** externa de planes parciales derivados del árbol de búsqueda. Continuamente expandimos esta frontera eliminando un nodo (seleccionado según nuestra estrategia) correspondiente a un plan parcial de la frontera y reemplazándolo con todos sus hijos en la frontera. Este proceso implica descartar un plan de longitud $n$ y considerar todos los planes de longitud $n+1$ que se derivan de él. Continuamos este procedimiento hasta que eventualmente eliminemos un estado objetivo de la frontera, momento en el cual concluimos que el plan parcial asociado con ese estado objetivo es, de hecho, un camino válido desde el estado inicial hasta el estado objetivo.
+
+En implementaciones prácticas, la mayoría de los algoritmos codifican información sobre el nodo padre, la distancia al nodo y el estado dentro del objeto nodo. Este procedimiento que acabamos de describir se conoce como **búsqueda en árbol**, y su pseudocódigo se presenta a continuación:
+
+```rust
+function TREE-SEARCH(problema, frontera) return solución o fallo
+    frontera ← INSERT(MAKE-NODE(INITIAL-STATE[problema]), frontera)
+    while not IS-EMPTY(frontera) do
+        nodo ← POP(frontera)
+        if problema.IS-GOAL(nodo.STATE) then return nodo
+        for each child-node in EXPAND(problema, nodo) do
+            add child-node to frontera
+    return fallo
+```
+
+La función `EXPAND` presente en el pseudocódigo devuelve todos los nodos posibles que pueden alcanzarse desde un nodo dado, considerando todas las acciones disponibles. El pseudocódigo de esta función es el siguiente:
+
+```rust
+function EXPAND(problema, nodo) yields nodos
+    s ← nodo.STATE
+    for each acción in problema.ACTIONS(s) do
+        s' ← problema.RESULT(s, acción)
+        yield NODE(STATE=s', PARENT=nodo, ACTION=acción)
+```
+
+Cuando no tenemos conocimiento sobre la ubicación de los estados objetivo en nuestro árbol de búsqueda, estamos obligados a seleccionar nuestra estrategia de búsqueda entre una de las técnicas que caen bajo el paraguas de la **búsqueda no informada**. A continuación, cubriremos tres estrategias sucesivas: **búsqueda en profundidad**, **búsqueda en anchura** y **búsqueda de costo uniforme**. Junto con cada estrategia, también se presentan algunas propiedades básicas de la misma, en términos de lo siguiente:
+
+- **Completitud**: Si existe una solución al problema de búsqueda, ¿garantiza la estrategia encontrarla dada una cantidad infinita de recursos computacionales?
+- **Optimalidad**: ¿Garantiza la estrategia encontrar el camino de menor costo hacia un estado objetivo?
+- **Factor de ramificación $b$**: El aumento en el número de nodos en la frontera cada vez que se elimina un nodo de la frontera y se reemplaza con sus hijos es $O(b)$. En la profundidad $k$ del árbol de búsqueda, existen $O(b^k)$ nodos.
+- **Profundidad máxima $m$**.
+- **Profundidad del objetivo más superficial $ s $**.
+
+---
+
+## Búsqueda en Profundidad (DFS)
+
+### Descripción
+
+La **búsqueda en profundidad (DFS)** es una estrategia de exploración que siempre selecciona el nodo más profundo en la frontera para su expansión.
+
+### Representación de la Frontera
+
+Eliminar el nodo más profundo y reemplazarlo en la frontera con sus hijos implica necesariamente que esos hijos son ahora los nuevos nodos más profundos, ya que su profundidad es una unidad mayor que la del nodo más profundo anterior. Esto sugiere que para implementar DFS, necesitamos una estructura que otorgue la mayor prioridad a los objetos añadidos más recientemente. Una **pila LIFO** (último en entrar, primero en salir) cumple exactamente con este propósito y es lo que tradicionalmente se utiliza para representar la frontera en DFS.
+
+### Completitud
+
+La búsqueda en profundidad no es completa. Si existen ciclos en el grafo del espacio de estados, esto inevitablemente significa que el árbol de búsqueda correspondiente tendrá una profundidad infinita. Por lo tanto, existe la posibilidad de que DFS quede "atascado" buscando indefinidamente el nodo más profundo en un árbol de búsqueda infinito, sin nunca encontrar una solución.
+
+### Optimalidad
+
+DFS simplemente encuentra la "primera" solución en el árbol de búsqueda sin tener en cuenta los costos de las rutas, por lo que **no es óptima**.
+
+### Complejidad Temporal
+
+En el peor de los casos, DFS puede terminar explorando todo el árbol de búsqueda. Por lo tanto, dado un árbol con profundidad máxima $m$, la complejidad temporal de DFS es $O(b^m)$.
+
+### Complejidad Espacial
+En el peor de los casos, DFS mantiene $b$ nodos en cada uno de los $m$ niveles de profundidad en la frontera. Esto es una consecuencia directa de que, una vez que se encolan $b$ hijos de algún padre, la naturaleza de DFS solo permite explorar uno de los subárboles de estos hijos en cualquier punto dado en el tiempo. Por lo tanto, la complejidad espacial de DFS es $O(bm)$.
+
+---
+
+## Búsqueda en Anchura (BFS)
+
+### Descripción
+
+La **búsqueda en anchura (BFS)** es una estrategia de exploración que siempre selecciona el nodo más superficial en la frontera para su expansión.
+
+### Representación de la Frontera
+
+Si queremos visitar los nodos más superficiales antes que los más profundos, debemos visitar los nodos en el orden en que fueron insertados. Para esto, BFS utiliza una **cola FIFO** (primero en entrar, primero en salir), que hace exactamente eso.
+
+### Completitud
+
+Si existe una solución, entonces la profundidad del nodo más superficial $s$ debe ser finita, por lo que BFS eventualmente buscará en esta profundidad. Por lo tanto, BFS es **completa**.
+
+### Optimalidad
+
+BFS generalmente no es óptima porque simplemente no tiene en cuenta los costos al determinar qué nodo reemplazar en la frontera. El caso especial donde BFS es garantizada como óptima es cuando todos los costos de las aristas son equivalentes, ya que esto reduce BFS a un caso especial de búsqueda de costo uniforme, que se discute a continuación.
+
+### Complejidad Temporal
+
+Debemos buscar $1 + b + b^2 + \dots + b^s$ nodos en el peor de los casos, ya que pasamos por todos los nodos a cada profundidad desde 1 hasta $s$. Por lo tanto, la complejidad temporal es $O(b^s)$.
+
+### Complejidad Espacial
+
+La frontera, en el peor de los casos, contiene todos los nodos en el nivel correspondiente a la solución más superficial. Dado que la solución más superficial está ubicada en la profundidad $s$, hay $O(b^s)$ nodos en este nivel.
+
+---
+
+## Búsqueda de Costo Uniforme (UCS)
+
+### Descripción
+
+La **búsqueda de costo uniforme (UCS)** es una estrategia de exploración que siempre selecciona el nodo de menor costo en la frontera desde el nodo inicial para su expansión.
+
+### Representación de la Frontera
+
+Para representar la frontera en UCS, la elección habitual es una **cola de prioridad basada en un montículo**, donde la prioridad para un nodo dado $v$ es el costo de la ruta desde el nodo inicial hasta $v$, también conocido como el costo hacia atrás de $v$. Intuitivamente, una cola de prioridad construida de esta manera simplemente se reorganiza para mantener el orden deseado por costo de ruta mientras eliminamos la ruta de costo mínimo actual y la reemplazamos con sus hijos.
+
+### Completitud
+
+La búsqueda de costo uniforme es completa. Si existe un estado objetivo, debe tener una ruta más corta de longitud finita; por lo tanto, UCS eventualmente encontrará esta ruta más corta.
+
+### Optimalidad
+
+UCS también es óptima si asumimos que todos los costos de las aristas son no negativos. Por construcción, dado que exploramos los nodos en orden creciente de costo de ruta, estamos garantizados de encontrar la ruta de menor costo hacia un estado objetivo. La estrategia empleada en UCS es idéntica a la del algoritmo de Dijkstra, aunque la principal diferencia es que UCS termina al encontrar un estado solución en lugar de encontrar la ruta más corta hacia todos los estados. Tener costos de arista negativos en nuestro grafo puede hacer que los nodos en una ruta tengan longitudes decrecientes, arruinando nuestra garantía de optimalidad. (Ver algoritmo de Bellman-Ford para un algoritmo más lento que maneja esta posibilidad).
+
+### Complejidad Temporal
+
+Definamos el costo óptimo de la ruta como $C*$ y el costo mínimo entre dos nodos en el grafo del espacio de estados como $\varepsilon$. Entonces, aproximadamente debemos explorar todos los nodos a profundidades que van desde 1 hasta $\frac{C*}{\varepsilon}$, lo que lleva a una complejidad temporal de $O(b^{\frac{C*}{\varepsilon}})$.
+
+### Complejidad Espacial
+
+Aproximadamente, la frontera contendrá todos los nodos en el nivel de la solución más barata, por lo que la complejidad espacial de UCS se estima en $O(b^{\frac{C*}{\varepsilon}})$.
+
+---
+
+### Nota Final sobre Búsqueda No Informada
+
+Es importante destacar que las tres estrategias descritas anteriormente son fundamentalmente las mismas, diferenciándose solo en su estrategia de expansión, con sus similitudes capturadas por el pseudocódigo de búsqueda en árbol presentado al principio.

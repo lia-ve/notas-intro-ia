@@ -1,0 +1,31 @@
+project:
+  type: book
+
+book:
+  title: "Notas de Introducción a la Inteligencia Artificial"
+  author: "Francisco Palm"
+  date: "2025-04-30"
+  chapters:
+    - index.qmd
+    - intro.qmd
+    - agentes.qmd
+    - espacio-estados.qmd
+    - busqueda-no-informada.qmd
+    - busqueda-informada.qmd
+    - satisfaccion-restricciones.qmd
+    - summary.qmd
+    - references.qmd
+
+bibliography: references.bib
+
+format:
+  html:
+    theme:
+      - pulsar
+      - brand
+    highlight-style: a11y
+  pdf:
+    documentclass: scrreprt
+
+
+lang: es
