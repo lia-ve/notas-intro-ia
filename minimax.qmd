@@ -1,0 +1,161 @@
+# Minimax
+
+El primer algoritmo de juegos de suma cero que exploraremos es **Minimax**, que opera bajo la suposición de que el oponente actúa de manera óptima y siempre elegirá la jugada que sea más perjudicial para nosotros. Para introducir este algoritmo, primero debemos formalizar los conceptos de **utilidad terminal** y **valor de estado**. El valor de un estado representa la mejor puntuación alcanzable por el agente que controla ese estado. Veamos cómo funciona esto con un ejemplo simple del juego de Pacman.
+
+![Juego de Pacman](images/easy-pacman.png){fig-align="center"}
+
+---
+
+## Valor de Estado y Utilidad Terminal
+
+Supongamos que Pacman comienza con $10$ puntos y pierde $1$ punto por cada movimiento hasta que come una píldora, momento en el cual el juego termina al alcanzar un estado terminal. Podemos construir un **árbol de juego** para este tablero, donde los hijos de un estado representan los estados sucesores, similar a los árboles de búsqueda en problemas normales.
+
+![Árbol del juego de Pacman](images/easy-pacman-tree.png){fig-align="center"}
+
+En este árbol, si Pacman se mueve directamente hacia la píldora, termina el juego con una puntuación de $8$ puntos. Si retrocede en algún momento, obtendrá una puntuación menor. Ahora que hemos generado un árbol de juego con estados terminales e intermedios, estamos listos para definir formalmente el valor de cualquier estado.
+
+El **valor de un estado** se define como el mejor resultado (**utilidad**) que un agente puede lograr desde ese estado. En estados terminales, este valor es una utilidad conocida determinística, inherente al juego. Por ejemplo, en nuestro caso, el valor del estado terminal más a la derecha es simplemente $8$, la puntuación que Pacman obtiene al ir directamente hacia la píldora.
+
+Para estados no terminales, el valor se define como el máximo de los valores de sus hijos. Definimos $V(s)$ como la función que asigna el valor a un estado $s$. Esto se resume de la siguiente manera:
+
+$$
+\forall \text{estados no terminales}, V(s) = \max_{s' \in \text{sucesores}(s)} V(s')
+$$
+
+$$
+\forall \text{estados terminales}, V(s) = \text{conocido}
+$$
+
+Esto establece una regla recursiva simple. Por ejemplo, el valor del hijo derecho del nodo raíz será $8$, mientras que el valor del hijo izquierdo será $6$. Al calcular estos valores, el agente puede determinar que moverse hacia la derecha es óptimo, ya que el hijo derecho tiene un valor mayor que el izquierdo.
+
+---
+
+## Introducción de un Fantasma Adversario
+
+Ahora consideremos un nuevo tablero donde un fantasma adversario intenta evitar que Pacman coma la píldora.
+
+![Pacman con un fantasma](images/pacman-with-ghost.png){fig-align="center"}
+
+Según las reglas del juego, los dos agentes alternan sus movimientos, lo que genera un árbol de juego donde los agentes se turnan en los niveles del árbol que "controlan". Un agente controla un nodo cuando es su turno para decidir la acción y cambiar el estado del juego.
+
+En el árbol de juego resultante, los nodos azules corresponden a nodos controlados por Pacman, mientras que los nodos rojos corresponden a nodos controlados por el fantasma. Por simplicidad, truncaremos este árbol a una profundidad de $2$ y asignaremos valores ficticios a los estados terminales.
+
+La presencia del fantasma cambia la jugada que Pacman considera óptima, y esta nueva jugada se determina mediante el algoritmo Minimax. En lugar de maximizar la utilidad en todos los niveles del árbol, Minimax maximiza sobre los hijos de los nodos controlados por Pacman y minimiza sobre los hijos de los nodos controlados por el fantasma. Por ejemplo:
+
+- Los nodos controlados por el fantasma tienen valores de $\min(-8, -5) = -8$ y $\min(-10, +8) = -10$, respectivamente.
+- El nodo raíz controlado por Pacman tiene un valor de $\max(-8, -10) = -8$.
+
+![Árbol del juego de Pacman](images/small-game-tree.png){fig-align="center"}
+
+Por lo tanto, Pacman elegirá moverse hacia la izquierda, obteniendo una puntuación de $-8$ en lugar de intentar llegar a la píldora y obtener $-10$. Este es un ejemplo claro de cómo emerge el comportamiento a través del cálculo: aunque Pacman desea la puntuación de $+8$, sabe que un fantasma que actúa de manera óptima no se lo permitirá. Para actuar de manera óptima, Pacman debe minimizar la magnitud de su derrota.
+
+Resumiendo, Minimax asigna valores a los estados de la siguiente manera:
+
+$$
+\forall \text{nodos controlados por el agente}, V(s) = \max_{s'\in \text{sucesores}(s)} V(s')
+$$
+
+$$
+\forall \text{nodos controlados por el oponente}, V(s) = \min_{s'\in \text{sucesores}(s)} V(s')
+$$
+
+$$
+\forall \text{estados terminales}, V(s) = \text{conocido}
+$$
+
+---
+
+## Implementación de Minimax
+
+En la implementación, Minimax se comporta de manera similar a la búsqueda en profundidad (DFS), calculando los valores de los nodos en el mismo orden que DFS lo haría, comenzando por el nodo terminal más a la izquierda y avanzando hacia la derecha. Más precisamente, realiza un recorrido postorden del árbol de juego. El pseudocódigo resultante para Minimax es elegante e intuitivo:
+
+----
+
+__function__ MINIMAX-DECISION(_state_) __returns__ _an action_  
+&emsp;__return__ arg max<sub> _a_ &Element; ACTIONS(_s_)</sub> MIN\-VALUE(RESULT(_state_, _a_))  
+
+---
+
+__function__ MAX\-VALUE(_state_) __returns__ _a utility value_  
+&emsp;__if__ TERMINAL\-TEST(_state_) __then return__ UTILITY(_state_)  
+&emsp;_v_ &larr; &minus;&infin;  
+&emsp;__for each__ _a_ __in__ ACTIONS(_state_) __do__  
+&emsp;&emsp;&emsp;_v_ &larr; MAX(_v_, MIN\-VALUE(RESULT(_state_, _a_)))  
+&emsp;__return__ _v_  
+
+---
+
+__function__ MIN\-VALUE(_state_) __returns__ _a utility value_  
+&emsp;__if__ TERMINAL\-TEST(_state_) __then return__ UTILITY(_state_)  
+&emsp;_v_ &larr; &infin;  
+&emsp;__for each__ _a_ __in__ ACTIONS(_state_) __do__  
+&emsp;&emsp;&emsp;_v_ &larr; MIN(_v_, MAX\-VALUE(RESULT(_state_, _a_)))  
+&emsp;__return__ _v_  
+
+----
+
+## Poda Alfa-Beta
+
+Aunque Minimax es simple, óptimo e intuitivo, su complejidad temporal es $O(b^m)$, donde $b$ es el factor de ramificación y $m$ es la profundidad aproximada del árbol. Esto es prohibitivo para muchos juegos. Por ejemplo, en ajedrez, $b \approx 35$ y $m \approx 100$. Para mitigar este problema, Minimax tiene una optimización llamada **poda alfa-beta**.
+
+La idea detrás de la poda alfa-beta es detener la evaluación de un nodo tan pronto como se determine que su valor no puede superar el valor óptimo del nodo padre. Consideremos el siguiente árbol de juego:
+
+1. Minimax primero evalúa los nodos con valores $3$, $12$ y $8$, asignando $\min(3, 12, 8) = 3$ al minimizador izquierdo.
+
+![Ejemplo Alpha-Beta Parte 1](images/alphabeta-example-pt1.png){fig-align="center"}
+
+2. Luego evalúa el minimizador medio, encontrando un hijo con valor $2$. En este punto, podemos detener la evaluación de los otros hijos del minimizador medio porque sabemos que su valor será como máximo $2$. Dado que el maximizador en la raíz ya tiene un valor de $3$ del minimizador izquierdo, no importa qué valores tengan los demás hijos del minimizador medio; el maximizador elegirá el valor $3$.
+
+![Ejemplo Alpha-Beta Parte 2](images/alphabeta-example-pt2.png){fig-align="center"}
+
+La poda alfa-beta puede reducir el tiempo de ejecución a $O(b^{m/2})$, duplicando efectivamente la profundidad "solucionable". En la práctica, esto permite buscar al menos uno o dos niveles más profundos, lo cual es significativo porque el jugador que anticipa más movimientos tiene una ventaja competitiva.
+
+----
+
+__function__ ALPHA-BETA-SEARCH(_state_) __returns__ an action  
+&emsp;_v_ &larr; MAX\-VALUE(_state_, &minus;&infin;, &plus;&infin;)  
+&emsp;__return__ the _action_ in ACTIONS(_state_) with value _v_  
+
+---
+
+__function__ MAX\-VALUE(_state_, _&alpha;_, _&beta;_) __returns__ _a utility value_  
+&emsp;__if__ TERMINAL\-TEST(_state_) __then return__ UTILITY(_state_)  
+&emsp;_v_ &larr; &minus;&infin;  
+&emsp;__for each__ _a_ __in__ ACTIONS(_state_) __do__  
+&emsp;&emsp;&emsp;_v_ &larr; MAX(_v_, MIN\-VALUE(RESULT(_state_, _a_), _&alpha;_, _&beta;_))  
+&emsp;&emsp;&emsp;__if__ _v_ &ge; _&beta;_ __then return__ _v_  
+&emsp;&emsp;&emsp;_&alpha;_ &larr; MAX(_&alpha;_, _v_)  
+&emsp;__return__ _v_  
+
+---
+
+__function__ MIN\-VALUE(_state_, _&alpha;_, _&beta;_) __returns__ _a utility value_  
+&emsp;__if__ TERMINAL\-TEST(_state_) __then return__ UTILITY(_state_)  
+&emsp;_v_ &larr; &plus;&infin;  
+&emsp;__for each__ _a_ __in__ ACTIONS(_state_) __do__  
+&emsp;&emsp;&emsp;_v_ &larr; MIN(_v_, MAX\-VALUE(RESULT(_state_, _a_), _&alpha;_, _&beta;_))  
+&emsp;&emsp;&emsp;__if__ _v_ &le; _&alpha;_ __then return__ _v_  
+&emsp;&emsp;&emsp;_&beta;_ &larr; MIN(_&beta;_, _v_)  
+&emsp;__return__ _v_  
+
+----
+
+## Funciones de Evaluación
+
+A pesar de la poda alfa-beta, la profundidad alcanzable sigue siendo insuficiente para resolver muchos juegos completamente. Por ello, recurrimos a **funciones de evaluación**, que toman un estado y devuelven una estimación del verdadero valor Minimax de ese nodo. Estas funciones se utilizan en el **Minimax con profundidad limitada**, donde tratamos los nodos no terminales en nuestra profundidad máxima como terminales, asignándoles utilidades ficticias basadas en la función de evaluación.
+
+Una función de evaluación común es una combinación lineal de características:
+
+$$
+Eval(s) = w_1f_1(s) + w_2f_2(s) + \dots + w_nf_n(s)
+$$
+
+Cada $f_i(s)$ corresponde a una característica extraída del estado $s$, y cada característica tiene un peso $w_i$. Por ejemplo, en damas, podríamos usar características como el número de peones del agente, el número de reyes del agente, y sus equivalentes para el oponente. Asignaríamos pesos positivos a las características del agente y negativos a las del oponente.
+
+Un ejemplo de función de evaluación podría ser:
+
+$$
+Eval(s) = 2 \cdot \text{reyes_agente}(s) + \text{peones_agente}(s) - 2 \cdot \text{reyes_oponente}(s) - \text{peones_oponente}(s)
+$$
+
+El diseño de funciones de evaluación es flexible y puede incluir funciones no lineales, como redes neuronales, en aplicaciones de aprendizaje por refuerzo. Lo más importante es que la función asigne puntajes más altos a posiciones mejores de manera consistente.

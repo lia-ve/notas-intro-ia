@@ -1,0 +1,62 @@
+# Ordenación de PSR
+
+Hemos delineado que al resolver un **Problema de Satisfacción de Restricciones (CSP)**, fijamos un orden tanto para las variables como para los valores involucrados. En la práctica, es mucho más efectivo calcular "sobre la marcha" la siguiente variable y el valor correspondiente utilizando dos principios amplios: **Valores Restantes Mínimos (MRV)** y **Valor Menos Restrictivo (LCV)**.
+
+---
+
+## Valores Restantes Mínimos (MRV)
+
+Cuando se selecciona qué variable asignar a continuación, utilizar una política de **Valores Restantes Mínimos (MRV)** elige la variable no asignada con el menor número de valores válidos restantes (la variable más restringida). Esto es intuitivo, ya que la variable más restringida tiene mayor probabilidad de quedarse sin valores posibles y provocar retrocesos si se deja sin asignar. Por lo tanto, es mejor asignarle un valor antes que después.
+
+### Ejemplo
+
+Supongamos que tenemos tres variables $X_1, X_2, X_3$ con dominios reducidos:
+- $X_1$: {rojo, verde}
+- $X_2$: {azul}
+- $X_3$: {rojo, azul, verde}
+
+Según MRV, seleccionaríamos primero $X_2$, ya que tiene solo un valor posible, lo que significa que es la más restrictiva y probablemente necesite atención inmediata.
+
+---
+
+## Valor Menos Restrictivo (LCV)
+
+De manera similar, al seleccionar qué valor asignar a continuación, una buena política es elegir el valor que poda el menor número de valores en los dominios de las variables no asignadas restantes. Esta estrategia se llama **Valor Menos Restrictivo (LCV)**. Aunque requiere cálculos adicionales (por ejemplo, volver a ejecutar la consistencia de arcos o la verificación anticipada para cada valor), puede generar ganancias significativas en velocidad dependiendo del uso.
+
+### Ejemplo
+
+Continuando con el ejemplo anterior, supongamos que estamos asignando valores a $ X_1 $ y tenemos dos opciones: rojo o verde. Si asignamos rojo y esto reduce significativamente los dominios de otras variables, podríamos optar por verde si poda menos valores en los dominios de las variables vecinas.
+
+---
+
+## Explotación de la Estructura del Problema
+
+Una clase final de mejoras para resolver problemas de satisfacción de restricciones implica **explotar su estructura**. En particular, si intentamos resolver un CSP con estructura de árbol (uno que no tiene ciclos en su grafo de restricciones), podemos reducir el tiempo de ejecución para encontrar una solución de $O(d^N)$ a $O(nd^2)$, lineal en el número de variables. Esto se logra mediante el **algoritmo de CSP estructurado en árbol**, descrito a continuación:
+
+### Algoritmo de CSP Estructurado en Árbol
+
+1. **Seleccionar una raíz**: Elija un nodo arbitrario en el grafo de restricciones del CSP para actuar como la raíz del árbol (no importa cuál, ya que cualquier nodo de un árbol puede ser raíz).
+   
+2. **Convertir aristas**: Convierta todas las aristas no dirigidas en el árbol a aristas dirigidas que apunten lejos de la raíz. Luego, **linealice** (o ordene topológicamente) el grafo dirigido acíclico resultante. Esto simplemente significa ordenar los nodos del grafo de tal manera que todas las aristas apunten hacia la derecha.
+
+   Por ejemplo, si seleccionamos el nodo $A$ como raíz y dirigimos todas las aristas para que apunten lejos de $A$, este proceso resulta en la siguiente conversión para el CSP presentado:
+
+3. **Pase hacia atrás de consistencia de arcos**: Itere desde $i = n$ hasta $i = 2$ y aplique la consistencia de arcos para todos los arcos $\text{Padre}(X_i) \rightarrow X_i$. Para el CSP linealizado, esta poda de dominios eliminará algunos valores, dejándonos con lo siguiente:
+
+4. **Asignación hacia adelante**: Comenzando desde $X_1$ y avanzando hasta $X_n$, asigne a cada $X_i$ un valor consistente con el de su padre. Dado que hemos aplicado la consistencia de arcos en todos estos arcos, no importa qué valor seleccionemos para cualquier nodo; sabemos que sus hijos tendrán al menos un valor consistente. Por lo tanto, esta asignación iterativa garantiza una solución correcta.
+
+Este proceso puede probarse inductivamente sin dificultad.
+
+---
+
+### Extensión con Condicionamiento de Conjunto de Corte
+
+El algoritmo de CSP estructurado en árbol puede extenderse a CSP que son razonablemente cercanos a tener estructura de árbol mediante **condicionamiento de conjunto de corte**. El condicionamiento de conjunto de corte implica:
+
+1. Encontrar el subconjunto más pequeño de variables en un grafo de restricciones tal que su eliminación resulte en un árbol (este subconjunto se denomina **conjunto de corte** para el grafo).
+   
+2. Asignar valores a todas las variables en el conjunto de corte y podar los dominios de todos los nodos vecinos. Lo que queda es un CSP estructurado en árbol, sobre el cual podemos resolver utilizando el algoritmo de CSP estructurado en árbol.
+
+Por ejemplo, en nuestro problema de coloreado de mapas, Australia del Sur ($SA$) es el conjunto de corte más pequeño:
+
+La asignación inicial a un conjunto de corte de tamaño $c$ puede dejar el CSP estructurado en árbol resultante sin solución válida después de la poda, por lo que aún podríamos necesitar retroceder hasta $d^c$ veces. Dado que la eliminación del conjunto de corte nos deja con un CSP estructurado en árbol con $(n - c)$ variables, sabemos que esto puede resolverse (o determinarse que no hay solución) en $O((n - c)d^2)$. Por lo tanto, el tiempo de ejecución del condicionamiento de conjunto de corte en un CSP general es $O(d^c(n-c)d^2)$, muy bueno para valores pequeños de $c$.

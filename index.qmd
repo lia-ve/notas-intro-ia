@@ -1,5 +1,9 @@
-# Contenidos {.unnumbered}
+# Prefacio {.unnumbered}
 
-This is a Quarto book.
+Este es un libro de notas introductorias de inteligencia artificial que hace énfasis en los componentes fundamentales de los sistemas inteligentes: resolución de problemas, razonamiento, toma de decisiones y aprendizaje. Se desarrollan estos temas tanto desde un punto de vista lógico como de probabilidades.
 
-To learn more about Quarto books visit <https://quarto.org/docs/books>.
+Este libro en su primera versión es una traducción muy cercana al libro [Introduction to Artificial Intelligence ](https://inst.eecs.berkeley.edu/~cs188/textbook/) elaborado por: Nikhil Sharma, Josh Hug, Jacky Liang, and Henry Zhu. Preparado específicamente para el curso [CS188](https://inst.eecs.berkeley.edu/~cs188/) del Departamento de Ingeniería Eléctrica y Ciencias de la Computación de la Universidad de California en Berkley.
+
+Y el libro anterior es a su vez es una versión ligera del libro de texto canónico de Inteligencia artificial: [*Artificial Intelligence: A Modern Approach*](https://aima.cs.berkeley.edu/) de Peter Norvig y Stuart Russell, el libro de texto de Inteligencia Artificial más utilizado en el planeta.
+
+La idea es que este libro evolucione en relación con los intereses y necesidades del Laboratorio Venezolano de Inteligencia Artificial.

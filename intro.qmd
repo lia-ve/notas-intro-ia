@@ -1,5 +1,13 @@
 # Introducción
 
-This is a book created from markdown and executable code.
+La **Inteligencia Artificial (IA)** es un campo interdisciplinario que busca dotar a las máquinas de la capacidad de resolver problemas, tomar decisiones y aprender de manera autónoma. Este material ofrece una exploración completa de los conceptos fundamentales de la IA, desde la creación de agentes racionales hasta técnicas avanzadas de aprendizaje automático. A través de una estructura clara y didáctica, cubrimos los pilares centrales de la inteligencia artificial: **resolución de problemas**, **razonamiento lógico**, **toma de decisiones bajo incertidumbre** y **aprendizaje**.
 
-See @knuth84 for additional discussion of literate programming.
+Comenzamos con el diseño de **agentes racionales**, entidades que interactúan con su entorno para alcanzar objetivos específicos. Luego, profundizamos en estrategias de **búsqueda no informada e informada**, como la búsqueda en anchura, en profundidad, y A*, que permiten resolver problemas complejos mediante la exploración eficiente de espacios de estados. También abordamos la **búsqueda adversarial**, esencial para modelar escenarios competitivos como juegos, donde dos o más agentes compiten por objetivos opuestos.
+
+Otro componente clave son los **problemas de satisfacción de restricciones (CSP)**, utilizados en aplicaciones como la planificación y la asignación de recursos, junto con técnicas avanzadas como la propagación de restricciones y la búsqueda local. Además, exploramos la **lógica** como herramienta para el razonamiento formal, permitiendo a las máquinas inferir conclusiones a partir de conocimiento previo.
+
+Para abordar la incertidumbre inherente en muchos problemas del mundo real, introducimos los **Procesos de Decisión de Markov (MDP)** y las **Redes Bayesianas**, que permiten modelar decisiones secuenciales y relaciones probabilísticas entre variables. Estos enfoques son fundamentales en áreas como la robótica, la medicina y los sistemas de recomendación.
+
+Finalmente, nos adentramos en el **aprendizaje automático**, donde las máquinas aprenden patrones a partir de datos para realizar predicciones y tomar decisiones sin ser explícitamente programadas. Este tema incluye algoritmos supervisados, no supervisados y de refuerzo, técnicas desde las cuales se han construido los desarrollos actuales en IA generativa.
+
+

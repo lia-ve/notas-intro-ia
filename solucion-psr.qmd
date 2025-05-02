@@ -1,0 +1,50 @@
+# Solución de PSR
+
+Los **Problemas de Satisfacción de Restricciones (CSP)** se resuelven tradicionalmente utilizando un algoritmo de búsqueda conocido como **búsqueda con retroceso (backtracking search)**. Esta técnica es una optimización de la **búsqueda en profundidad** diseñada específicamente para resolver CSP, y sus mejoras provienen de dos principios clave:
+
+1. **Ordenación de variables**: Se establece un orden fijo para las variables y se les asignan valores siguiendo este orden. Esto es válido porque las asignaciones son **conmutativas**, es decir, el orden en que se asignan los valores no afecta el resultado final. Por ejemplo, asignar $WA = \text{Rojo}, NT = \text{Verde}$ es equivalente a $NT = \text{Verde}, WA = \text{Rojo}$.
+
+2. **Asignación válida de valores**: Al seleccionar valores para una variable, solo se consideran aquellos que no entren en conflicto con las asignaciones previas. Si no hay valores válidos disponibles para una variable, el algoritmo retrocede al estado anterior y modifica la asignación de la variable previa.
+
+A continuación, se presenta el pseudocódigo de cómo funciona la **búsqueda con retroceso recursivo**:
+
+```rust
+function BACKTRACK(assignment, csp):
+    if assignment is complete:
+        return assignment
+    var ← SELECT-UNASSIGNED-VARIABLE(csp)
+    for each value in ORDER-DOMAIN-VALUES(var, assignment, csp):
+        if value is consistent with assignment:
+            add {var = value} to assignment
+            result ← BACKTRACK(assignment, csp)
+            if result ≠ failure:
+                return result
+            remove {var = value} from assignment
+    return failure
+```
+
+## Comparación entre Búsqueda en Profundidad y Búsqueda con Retroceso
+
+Para visualizar cómo funciona este proceso, consideremos los árboles de búsqueda parciales tanto para la **búsqueda en profundidad (DFS)** como para la **búsqueda con retroceso** en el problema de coloreado de mapas:
+
+- **DFS**: En la búsqueda en profundidad, el algoritmo asigna colores a las regiones sin verificar si cumplen las restricciones hasta que ha recorrido una gran parte del árbol. Esto puede llevar a asignaciones incorrectas desde el principio, como colorear todas las regiones de rojo antes de darse cuenta de que esto viola las restricciones. Incluso cuando detecta un error, DFS no siempre retrocede de manera eficiente hacia una solución válida.
+
+- **Búsqueda con Retroceso**: Por otro lado, la búsqueda con retroceso solo asigna un valor a una variable si ese valor no viola ninguna restricción. Esto reduce significativamente la cantidad de retrocesos necesarios, ya que evita explorar ramas inválidas del árbol de búsqueda.
+
+En resumen, mientras que DFS realiza una exploración exhaustiva y poco eficiente, la búsqueda con retroceso prioriza la consistencia de las asignaciones, lo que permite encontrar soluciones más rápidamente.
+
+---
+
+## Mejoras Adicionales para la Búsqueda con Retroceso
+
+Aunque la búsqueda con retroceso es una mejora significativa sobre la fuerza bruta de la búsqueda en profundidad, aún podemos optimizarla aún más mediante las siguientes técnicas:
+
+1. **Filtrado**: Antes de asignar un valor a una variable, se pueden aplicar técnicas como la **revisión anticipada (forward checking)** o la **propagación de restricciones** para reducir el dominio de las variables futuras y detectar conflictos potenciales de manera temprana.
+
+2. **Ordenación de Variables y Valores**: Elegir cuidadosamente el orden en que se seleccionan las variables y los valores puede mejorar drásticamente el rendimiento. Por ejemplo:
+   - **Ordenación de Variables**: Priorizar las variables con menos valores posibles (heurística MRV: Minimum Remaining Values).
+   - **Ordenación de Valores**: Asignar primero los valores que son más prometedores según ciertos criterios heurísticos.
+
+3. **Explotación de la Estructura del Problema**: Si el grafo de restricciones tiene una estructura específica, como ser un árbol, se pueden aplicar algoritmos especializados que resuelvan el problema en tiempo polinomial.
+
+Estas mejoras permiten reducir aún más el espacio de búsqueda y acelerar significativamente la resolución de CSP complejos.

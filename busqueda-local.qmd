@@ -1,0 +1,139 @@
+# Búsqueda Local
+
+Hasta ahora, hemos explorado cómo resolver **Problemas de Satisfacción de Restricciones (CSP)** utilizando algoritmos como la búsqueda con retroceso. Sin embargo, no es el único método disponible para abordar estos problemas. Otra técnica ampliamente utilizada es la **búsqueda local**, cuya idea básica es extremadamente simple pero notablemente efectiva en la práctica.
+
+## Descripción de la Búsqueda Local
+
+La **búsqueda local** opera mediante un proceso iterativo de mejora: comienza con una asignación aleatoria de valores a las variables del problema y luego, en cada paso, selecciona una variable que esté en conflicto y reasigna su valor de manera que se reduzca el número total de conflictos. Este proceso continúa hasta que todas las restricciones se cumplen (es decir, ya no hay conflictos).
+
+Una política común utilizada en este tipo de búsqueda es la llamada **heurística de mínimos conflictos (min-conflicts heuristic)**, que consiste en elegir, para cada variable seleccionada, el valor que viola el menor número de restricciones. Esta estrategia permite acelerar la convergencia hacia una solución válida.
+
+Un ejemplo clásico donde esta heurística funciona muy bien es el problema de las **N-Reinas**, donde se debe encontrar una configuración de $N$ reinas en un tablero de ajedrez de tamaño $N \times N$ sin que ninguna ataque a otra. La búsqueda local puede resolver este tipo de problemas de forma muy eficiente en tiempo y espacio. De hecho, parece ejecutarse en un tiempo casi constante incluso para valores grandes de $N$, además de tener una alta probabilidad de éxito para CSPs generados aleatoriamente.
+
+Sin embargo, también tiene sus limitaciones. La búsqueda local **no es completa ni óptima**, lo que significa que no garantiza encontrar una solución si existe, ni tampoco asegura llegar a la mejor solución posible. Además, en ciertos casos, cuando la relación entre el número de restricciones y el número de variables es crítica, la búsqueda local puede volverse extremadamente lenta o incluso quedarse atascada sin progresar significativamente.
+
+------------------------------------------------------------------------
+
+## Tres Algoritmos de Búsqueda Local
+
+A continuación, presentamos tres métodos fundamentales de búsqueda local que también son ampliamente utilizados en tareas de optimización para maximizar o minimizar una función objetivo:
+
+### Búsqueda en Escalada (Hill-Climbing)
+
+#### Descripción
+
+El algoritmo de **búsqueda en escalada (hill-climbing)** se mueve desde el estado actual hacia un estado vecino que incremente el valor de la función objetivo. No mantiene un árbol de búsqueda explícito, sino que solo considera los estados actuales y sus respectivos valores objetivos.
+
+Este método es conocido por su naturaleza "codiciosa", ya que siempre intenta mejorar inmediatamente el valor objetivo. Sin embargo, esto lo hace susceptible de quedar atrapado en **máximos locales**, puntos que parecen óptimos desde una perspectiva local pero no lo son globalmente, así como en **mesetas (plateaux)**, áreas del espacio de estados donde no hay cambios significativos en la función objetivo.
+
+#### Variantes
+
+-   **Búsqueda en escalada estocástica (stochastic hill-climbing)**: En lugar de elegir determinísticamente el mejor movimiento posible, selecciona uno al azar entre los movimientos ascendentes. Esto puede ayudar a evitar quedarse atrapado prematuramente en máximos locales, aunque pueda requerir más iteraciones.
+
+----
+
+__function__ HILL-CLIMBING(_problem_) __returns__ a state that is a local maximum  
+&emsp;_current_ &larr; _problem_.INITIAL\-STATE  
+&emsp;__loop do__  
+&emsp;&emsp;&emsp;_neighbor_ &larr; a highest\-valued successor of _current_  
+&emsp;&emsp;&emsp;_if_ VALUE(_neighbour_) &le; VALUE(_current_) __then return__ _current_  
+&emsp;&emsp;&emsp;_current_ &larr; _neighbor_  
+
+----
+
+#### Completitud
+
+La versión básica no es completa, ya que puede quedar atrapada en máximos locales o mesetas. Sin embargo, una variante llamada **hill-climbing con reinicio aleatorio (random-restart hill-climbing)** sí es completa, ya que repite la búsqueda desde distintos puntos iniciales aleatorios hasta encontrar una solución.
+
+------------------------------------------------------------------------
+
+### Recocido Simulado (Simulated Annealing)
+
+#### Descripción
+
+El **recocido simulado (simulated annealing)** combina elementos de la búsqueda aleatoria ("random walk") y la búsqueda en escalada para crear un algoritmo completo y eficiente. A diferencia del hill-climbing, permite transiciones a estados que reducen el valor objetivo, lo cual ayuda a escapar de los máximos locales.
+
+El algoritmo elige una acción al azar y acepta:
+
+ - **Si mejora el objetivo:** Siempre se acepta.
+ - **Si empeora el objetivo:** Se acepta con una probabilidad que depende de un parámetro llamado **temperatura**, que disminuye progresivamente durante la ejecución.
+
+Esta temperatura controla cuánto riesgo se está dispuesto a asumir: inicialmente es alta (se permiten muchos movimientos "malos"), y va disminuyendo según una programación establecida. Si se reduce lentamente, el algoritmo puede alcanzar el máximo global con una probabilidad cercana a 1.
+
+----
+
+__function__ SIMULATED-ANNEALING(_problem_,_schedule_) __returns__ a solution state  
+
+&emsp;_current_ &larr; _problem_.INITIAL\-STATE  
+&emsp;__for__ _t_ = 1 __to__ &infin;  __do__  
+&emsp;&emsp;&emsp;_T_ &larr; _schedule(t)_  
+&emsp;&emsp;&emsp;__if__ _T_ = 0 __then return__ _current_  
+&emsp;&emsp;&emsp;_next_ &larr; a randomly selected successor of _current_  
+&emsp;&emsp;&emsp;_&Delta;E_ &larr; VALUE(_next_) - VALUE(_current_)  
+&emsp;&emsp;&emsp;__if__ _&Delta;E_ > 0 __then__ _current_ &larr; _next_  
+&emsp;&emsp;&emsp;__else__ _current_ &larr; _next_ only with probability e<sup>_&Delta;E_/_T_</sup>
+
+----
+
+### Algoritmos Genéticos
+
+#### Descripción
+
+Los **algoritmos genéticos (genetic algorithms)** son una variante de la búsqueda local inspirada en la evolución biológica. Funcionan con una población de soluciones candidatas, que van evolucionando mediante operaciones como selección, cruce (o recombinación) y mutación.
+
+Empiezan con una **población** de k estados inicializados aleatoriamente. Cada estado se representa típicamente como una cadena de símbolos (por ejemplo, números o letras). Luego, los estados se evalúan usando una **función de aptitud (fitness function)** que determina qué tan buena es una solución. Los mejores individuos tienen mayor probabilidad de ser seleccionados para reproducirse y generar descendientes.
+
+#### Operaciones Principales
+
+1.  **Selección**: Elegir individuos basándose en su aptitud.
+2.  **Cruce (recombinación)**: Combinar partes de dos padres para crear nuevos individuos.
+3.  **Mutación**: Introducir pequeños cambios aleatorios para mantener diversidad genética.
+
+#### Ventaja Principal
+
+La principal ventaja de los algoritmos genéticos es su capacidad para combinar bloques de soluciones exitosas a través del cruce, permitiendo construir soluciones complejas y altamente valoradas.
+
+#### Ejemplo: Problema de las 8 Reinas
+
+En el caso del problema de las 8 reinas, cada individuo podría representarse como una lista de 8 números, donde cada posición indica la fila ocupada por una reina en esa columna. La función de aptitud podría medir el número de pares de reinas que no se atacan mutuamente.
+
+----
+
+__function__ GENETIC-ALGORITHM(_population_, FITNESS\-FN) __returns__ an individual  
+&emsp;__inputs__: _population_, the initial random population of individuals  
+&emsp;&emsp;&emsp;&emsp;FITNESS\-FN, a function that measures the fitness of an individual  
+
+&emsp;__repeat__  
+&emsp;&emsp;&emsp;_population_ &larr; [MUTATE(RECOMBINE(SELECT(2, _population_, FITNESS\-FN)))  
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;__for__ _i_ __in__ _population_]  
+&emsp;__until__ some individual is fit enough, or enough time has elapsed  
+&emsp;__return__ the best individual in _population_, according to FITNESS\-FN  
+
+----
+
+__function__ SELECT(ρ, _population_, FITNESS\-FN) __returns__ a set of ρ individuals  
+&emsp;_selection_ &larr; a uniform random sample of 2 * ρ individuals from _population_  
+&emsp;__return__ the top ρ individuals in _selection_, ranked by FITNESS\-FN  
+
+----
+
+__function__ RECOMBINE(_x_, _y_) __returns__ an individual  
+&emsp;__inputs__: _x_,_y_, parent individuals  
+  
+&emsp;_n_ &larr; LENGTH(_x_)  
+&emsp;_crossover_ &larr; random integer from 0 to _n_  
+&emsp;__return__ APPEND(_x_\[0:_crossover_\], _y_\[_crossover_: _n_\])  
+
+----
+
+## Resumen
+
+La **búsqueda local** ofrece una clase de algoritmos poderosos, especialmente útiles cuando se requiere encontrar una solución razonablemente buena en un tiempo corto. Aunque no garantizan completitud ni optimalidad, su simplicidad y eficiencia hacen que sean herramientas valiosas en muchas aplicaciones prácticas, especialmente en problemas con espacios de estado muy grandes o dinámicos.
+
+Entre las variantes destacan:
+
+- **Hill-climbing**, para búsquedas rápidas pero propensas a quedar atrapadas en óptimos locales.
+- **Simulated Annealing**, que equilibra exploración y explotación para evitar óptimos locales.
+- **Algoritmos Genéticos**, que combinan información de múltiples soluciones para construir nuevas candidatas más fuertes.
+
+Estas técnicas no solo son útiles para resolver CSP, sino que también son ampliamente aplicables en campos como la optimización numérica, diseño de redes, aprendizaje automático y planificación robotizada.

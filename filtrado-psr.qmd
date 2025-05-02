@@ -1,0 +1,70 @@
+# Filtrado de PSR
+
+La primera mejora en el rendimiento de los **Problemas de Satisfacción de Restricciones (CSP)** que consideraremos es el **filtrado**, que verifica si podemos recortar los dominios de las variables no asignadas con anticipación eliminando valores que sabemos que resultarán en retrocesos durante la búsqueda. Un método básico para el filtrado es la **verificación anticipada (forward checking)**, que cada vez que se asigna un valor a una variable $X_i$ poda los dominios de las variables no asignadas que comparten una restricción con $X_i$ eliminando aquellos valores que violarían la restricción si se asignaran. Cada vez que se asigna una nueva variable, podemos ejecutar la verificación anticipada y recortar los dominios de las variables no asignadas adyacentes a la variable recién asignada en el grafo de restricciones.
+
+Consideremos nuestro ejemplo de coloreado de mapas, con variables no asignadas y sus valores potenciales:
+
+Observe cómo, al asignar $WA = \text{rojo}$ y luego $Q = \text{verde}$ el tamaño de los dominios para $NT$, $NSW$, y $SA$ (estados adyacentes a $WA$, $Q$, o ambos) disminuye a medida que se eliminan valores. La idea de la verificación anticipada puede generalizarse en el principio de **consistencia de arcos**. Para la consistencia de arcos, interpretamos cada arista no dirigida del grafo de restricciones del CSP como dos aristas dirigidas apuntando en direcciones opuestas. Cada una de estas aristas dirigidas se denomina **arco**. El algoritmo de consistencia de arcos funciona de la siguiente manera:
+
+---
+
+## Algoritmo de Consistencia de Arcos
+
+1. Comenzamos almacenando todos los arcos en el grafo de restricciones del CSP en una cola $Q$
+2. Iterativamente, retiramos arcos de $Q$ y aplicamos la condición de que, en cada arco retirado $X_i \rightarrow X_j$ para cada valor restante $v$ en el dominio de la variable de cola $X_i$ debe haber al menos un valor restante $w$ en el dominio de la variable de cabeza $X_j$ tal que $X_i = v$ $X_j = w$ no violen ninguna restricción. Si algún valor $v$ para $X_i$ no funciona con ninguno de los valores restantes para $X_j$ eliminamos $v$ del conjunto de valores posibles para $X_i$
+3. Si al menos un valor se elimina del dominio de $X_i$ al aplicar la consistencia de arcos para un arco $X_i \rightarrow X_j$ agregamos arcos de la forma $X_k \rightarrow X_i$ a $Q$ para todas las variables no asignadas $X_k$ Si un arco $X_k \rightarrow X_i$ ya está en $Q$ no es necesario agregarlo nuevamente.
+4. Continuamos hasta que $Q$ esté vacía, o el dominio de alguna variable quede vacío, lo que desencadena un retroceso.
+
+El algoritmo de consistencia de arcos no siempre es intuitivo, así que caminemos a través de un ejemplo rápido con el coloreado de mapas:
+
+Comenzamos agregando todos los arcos entre variables no asignadas que comparten una restricción a una cola $Q$ lo que nos da:
+
+$$
+Q = [
+SA \rightarrow V, V \rightarrow SA, SA \rightarrow NSW, NSW \rightarrow SA, SA \rightarrow NT, NT \rightarrow SA, V \rightarrow NSW, NSW \rightarrow V]
+$$
+
+Para nuestro primer arco, $SA \rightarrow V$ observamos que para cada valor en el dominio de $SA$ ${azul}$ hay al menos un valor en el dominio de $V$ ${rojo, verde, azul}$ que no viola ninguna restricción, por lo que no es necesario podar ningún valor del dominio de $SA$ Sin embargo, para nuestro siguiente arco $V \rightarrow SA$ si establecemos $V = \text{azul}$ vemos que $SA$ no tendrá valores restantes que no violen restricciones, por lo que eliminamos $\text{azul}$ del dominio de $V$
+
+Dado que hemos eliminado un valor del dominio de $V$ necesitamos encolar todos los arcos con $V$ como cabeza: $SA \rightarrow V$ $NSW \rightarrow V$ Como $NSW \rightarrow V$ ya está en $Q$ solo necesitamos agregar $SA \rightarrow V$ dejándonos con nuestra cola actualizada:
+
+$$
+Q = [SA \rightarrow NSW, NSW \rightarrow SA, SA \rightarrow NT, NT \rightarrow SA, V \rightarrow NSW, NSW \rightarrow V, SA \rightarrow V]
+$$
+
+Podemos continuar este proceso hasta que eventualmente retiremos el arco $SA \rightarrow NT$ de $Q$ Aplicar la consistencia de arcos en este arco elimina $\text{azul}$ del dominio de $SA$ dejándolo vacío y desencadenando un retroceso. Tenga en cuenta que el arco $NSW \rightarrow SA$ aparece antes que $SA \rightarrow NT$ en $Q$ y aplicar la consistencia en este arco elimina $\text{azul}$del dominio de $NSW$
+
+---
+
+## Implementación con el Algoritmo AC-3
+
+La consistencia de arcos generalmente se implementa con el **algoritmo AC-3** (Algoritmo de Consistencia de Arcos #3), cuyo pseudocódigo es el siguiente:
+
+```rust
+function AC-3(csp):
+    queue ← all arcs in csp
+    while queue is not empty:
+        (Xi, Xj) ← REMOVE-FIRST(queue)
+        if REVISE(csp, Xi, Xj):
+            if size of Di == 0:
+                return false
+            for each Xk in neighbors(Xi) - {Xj}:
+                add (Xk, Xi) to queue
+    return true
+
+function REVISE(csp, Xi, Xj):
+    revised ← false
+    for each x in Di:
+        if no value y in Dj allows (x,y) to satisfy the constraint between Xi and Xj:
+            delete x from Di
+            revised ← true
+    return revised
+```
+
+El algoritmo AC-3 tiene una complejidad temporal en el peor caso de $O(ed^3)$ donde $e$ es el número de arcos (aristas dirigidas) y $d$ es el tamaño del dominio más grande. En general, la consistencia de arcos es una técnica de poda de dominios más holística que la verificación anticipada y conduce a menos retrocesos, pero requiere realizar significativamente más cálculos para aplicarla. Por lo tanto, es importante tener en cuenta este equilibrio al decidir qué técnica de filtrado implementar para el CSP que intenta resolver.
+
+---
+
+## Nota sobre la Consistencia Generalizada
+
+Como nota interesante sobre la consistencia, la consistencia de arcos es un subconjunto de una noción más generalizada de consistencia conocida como **k-consistencia**, que, cuando se aplica, garantiza que para cualquier conjunto de $k$ nodos en el CSP, una asignación consistente para cualquier subconjunto de $k-1$ nodos garantiza que el $k $-ésimo nodo tendrá al menos un valor consistente. Esta idea puede extenderse aún más mediante el concepto de **fuerte k-consistencia**. Un grafo que es fuertemente $k $-consistente posee la propiedad de que cualquier subconjunto de $k$ nodos no solo es $k $-consistente, sino también $k-1, k-2, \dots, 1 $-consistente. No sorprende que imponer un mayor grado de consistencia en un CSP sea más costoso de calcular. Bajo esta definición generalizada de consistencia, podemos ver que la consistencia de arcos es equivalente a la **2-consistencia**.

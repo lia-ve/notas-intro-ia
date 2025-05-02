@@ -1,0 +1,44 @@
+# Juegos
+
+En la primera nota, hablamos sobre los problemas de búsqueda y cómo resolverlos de manera eficiente y óptima: utilizando potentes algoritmos de búsqueda generalizados, nuestros agentes podían determinar el mejor plan posible y simplemente ejecutarlo para llegar a un objetivo.
+
+Ahora, cambiemos de enfoque y consideremos escenarios donde nuestros agentes tienen uno o más adversarios que intentan evitar que alcancen sus objetivos. Nuestros agentes ya no pueden ejecutar los algoritmos de búsqueda que hemos aprendido hasta ahora para formular un plan, ya que normalmente no sabemos de manera determinista cómo nuestros adversarios planean contraatacar o responder a nuestras acciones. En su lugar, necesitaremos ejecutar una nueva clase de algoritmos que proporcionen soluciones a **problemas de búsqueda adversarial**, más comúnmente conocidos como **juegos**.
+
+---
+
+## Tipos de Juegos
+
+Existen muchos tipos diferentes de juegos. Los juegos pueden tener acciones con resultados **deterministas** o **estocásticos** (probabilísticos), pueden involucrar cualquier número variable de jugadores, y pueden ser de suma cero o no. La primera clase de juegos que cubriremos son los **juegos deterministas de suma cero**, donde las acciones son deterministas y nuestra ganancia es directamente equivalente a la pérdida de nuestro oponente, y viceversa. La forma más sencilla de pensar en tales juegos es como si estuvieran definidos por una única variable de valor, que un equipo o agente intenta maximizar mientras que el equipo o agente opuesto intenta minimizarla, colocándolos efectivamente en competencia directa. 
+
+Por ejemplo, en Pacman, esta variable es tu puntaje, que intentas maximizar comiendo píldoras de manera rápida y eficiente, mientras que los fantasmas intentan minimizarlo al comerte primero. Muchos juegos comunes también caen dentro de esta categoría:
+
+- **Damas**: El primer jugador de damas computarizado se creó en 1950. Desde entonces, las damas se han convertido en un *juego resuelto*, lo que significa que cualquier posición puede evaluarse como una victoria, derrota o empate de manera determinista para cualquiera de los lados, siempre que ambos jugadores actúen de manera óptima.
+
+- **Ajedrez**: En 1997, Deep Blue se convirtió en el primer agente computarizado en derrotar al campeón mundial de ajedrez Garry Kasparov en una partida de seis juegos. Deep Blue fue diseñado para utilizar métodos extremadamente sofisticados para evaluar más de 200 millones de posiciones por segundo. Los programas actuales son aún mejores, aunque ya no son tan relevantes.
+
+- **Go**: El espacio de búsqueda para Go es mucho mayor que para el ajedrez, y durante mucho tiempo se pensó que los agentes computarizados de Go no podrían derrotar a los campeones humanos mundiales en varios años. Sin embargo, AlphaGo, desarrollado por Google, derrotó históricamente al campeón Lee Sedol por 4 juegos a 1 en marzo de 2016.
+
+Todos los agentes campeones del mundo mencionados anteriormente utilizan, al menos en cierta medida, las técnicas de búsqueda adversarial que estamos a punto de cubrir. A diferencia de la búsqueda normal, que devuelve un plan integral, la **búsqueda adversarial** devuelve una **estrategia** o **política**, que simplemente recomienda la mejor jugada posible dada alguna configuración de nuestros agentes y sus adversarios.
+
+Pronto veremos que estos algoritmos tienen la hermosa propiedad de generar comportamiento a través del cálculo: el cálculo que ejecutamos es relativamente simple en concepto y ampliamente generalizable, pero genera de manera innata cooperación entre los agentes del mismo equipo, así como la capacidad de "superar" a los agentes adversarios.
+
+---
+
+## Formulación Estándar de Juegos
+
+La formulación estándar de un juego consiste en las siguientes definiciones:
+
+- **Estado inicial**, $s_0$: El estado inicial del juego.
+- **Jugadores**, $Players(s)$: Indica de quién es el turno en un estado dado.
+- **Acciones**, $Actions(s)$: Las acciones disponibles para el jugador en un estado dado.
+- **Modelo de transición**, $Result(s, a)$: Define el estado resultante tras realizar una acción $a$ en el estado $s$.
+- **Prueba terminal**, $Terminal-test(s)$: Determina si el estado actual es un estado terminal (es decir, si el juego ha terminado).
+- **Valores terminales**, $Utility(s, player)$: Asigna un valor numérico al estado terminal desde la perspectiva de un jugador específico, indicando cuánto beneficio o pérdida representa ese estado para el jugador.
+
+---
+
+## Búsqueda Adversarial vs. Búsqueda Normal
+
+Mientras que los algoritmos de búsqueda tradicionales (como BFS, DFS o A*) devuelven un **plan completo** para alcanzar un objetivo, los algoritmos de búsqueda adversarial generan una **estrategia** o **política**. Esta estrategia indica la mejor jugada posible en función de la configuración actual del tablero o entorno y las posibles acciones del adversario. Este enfoque permite a los agentes tomar decisiones dinámicas frente a la incertidumbre impuesta por los adversarios.
+
+Los algoritmos de búsqueda adversarial, como el **Minimax** y el **Poda Alfa-Beta**, son fundamentales para resolver juegos deterministas de suma cero. Estos algoritmos permiten a los agentes "prever" las posibles acciones de sus oponentes y seleccionar la jugada que maximice sus posibilidades de éxito, incluso en el peor de los casos.

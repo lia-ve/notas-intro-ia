@@ -1,13 +1,13 @@
 # Estados y Búsqueda
 
-Para crear un **agente planificador racional**, necesitamos una forma de expresar matemáticamente el entorno en el que el agente existirá. Para lograr esto, debemos formalizar un **problema de búsqueda**: dado el estado actual del agente (su configuración dentro de su entorno), ¿cómo podemos llegar a un nuevo estado que satisfaga sus objetivos de la mejor manera posible? Un problema de búsqueda consta de los siguientes elementos:
+Para crear un **agente planificador racional**, necesitamos una forma de expresar matemáticamente el entorno en el que el agente existirá. Para lograr esto, debemos formalizar un **problema de búsqueda**: dado el **estado** actual del agente (su configuración dentro de su entorno), ¿cómo podemos llegar a un nuevo estado que satisfaga sus objetivos de la mejor manera posible? Un problema de búsqueda consta de los siguientes elementos:
 
-- **Espacio de estados**: El conjunto de todos los estados posibles que pueden existir en el mundo dado.
-- Conjunto de **acciones** disponibles en cada estado.
-- Modelo de **transición**: Determina cuál será el siguiente estado cuando se toma una acción específica en el estado actual.
-- **Costo** de acción: El costo incurrido al pasar de un estado a otro después de aplicar una acción.
-- **Estado inicial**: El estado en el que el agente existe inicialmente.
-- **Prueba de objetivo**: Una función que toma un estado como entrada y determina si es un estado objetivo.
+-   **Espacio de estados**: El conjunto de todos los estados posibles que pueden existir en el mundo dado.
+-   Conjunto de **acciones** disponibles en cada estado.
+-   Modelo de **transición**: Determina cuál será el siguiente estado cuando se toma una acción específica en el estado actual.
+-   **Costo** de acción: El costo incurrido al pasar de un estado a otro después de aplicar una acción.
+-   **Estado inicial**: El estado en el que el agente existe inicialmente.
+-   **Prueba de objetivo**: Una función que toma un estado como entrada y determina si es un estado objetivo.
 
 En lo fundamental, un problema de búsqueda se resuelve considerando primero el estado inicial, luego explorando el espacio de estados utilizando métodos de acción, transición y costo para, iterativamente, calcular los hijos de varios estados hasta que lleguemos a un estado objetivo. En ese momento, habremos determinado un camino desde el estado inicial hasta el estado objetivo (generalmente llamado un **plan**). El orden en que se consideran los estados está determinado por una estrategia predeterminada. Más adelante cubriremos los tipos de estrategias y su utilidad.
 
@@ -17,23 +17,25 @@ Es importante notar la diferencia entre un **estado del mundo** y un **estado de
 
 El juego de Pacman es simple: Pacman debe navegar por un laberinto y comer todas las píldoras (pequeñas) sin ser comido por los fantasmas maliciosos que patrullan el laberinto. Si Pacman come una de las píldoras grandes, obtiene inmunidad contra los fantasmas durante un período de tiempo determinado y gana la capacidad de comer fantasmas para obtener puntos.
 
+![Imagen de ejemplo de Pacman](images/pacman_example.png){fig-align="center"}
+
 ### Variación del Juego
 
 Consideremos una variación del juego en la que el laberinto contiene solo a Pacman y píldoras de comida. Podemos plantear dos problemas de búsqueda distintos en este escenario: **ruta óptima** y **comer-todas-las-píldoras**.
 
 #### Ruta Óptima (Pathing)
 
-- **Estados**: Posiciones $(x, y)$
-- **Acciones**: Norte, Sur, Este, Oeste
-- **Modelo de transición**: Actualiza únicamente la posición
-- **Prueba de objetivo**: ¿Es $(x, y) = FIN$?
+-   **Estados**: Posiciones $(x, y)$
+-   **Acciones**: Norte, Sur, Este, Oeste
+-   **Modelo de transición**: Actualiza únicamente la posición
+-   **Prueba de objetivo**: ¿Es $(x, y) = FIN$?
 
 #### Comer-Todas-Las-Píldoras (Eat-all-dots)
 
-- **Estados**: {$(x, y)$ posición, booleanos de píldoras}
-- **Acciones**: Norte, Sur, Este, Oeste
-- **Modelo de transición**: Actualiza la posición y los booleanos de las píldoras
-- **Prueba de objetivo**: ¿Son todos los booleanos de las píldoras falsos?
+-   **Estados**: {$(x, y)$ posición, booleanos de píldoras}
+-   **Acciones**: Norte, Sur, Este, Oeste
+-   **Modelo de transición**: Actualiza la posición y los booleanos de las píldoras
+-   **Prueba de objetivo**: ¿Son todos los booleanos de las píldoras falsos?
 
 Note que, para la ruta óptima, los estados contienen menos información que los estados para "comer-todas-las-píldoras", ya que para el segundo caso debemos mantener un arreglo de booleanos correspondientes a cada píldora e indicar si ha sido consumida o no en el estado dado. Un estado del mundo puede contener aún más información, potencialmente codificando detalles como la distancia total recorrida por Pacman o todas las posiciones visitadas por Pacman además de su posición actual ($x, y$) y los booleanos de las píldoras.
 
@@ -43,32 +45,44 @@ Una pregunta importante que surge con frecuencia al estimar el tiempo computacio
 
 ### Ejemplo con Pacman
 
+![Tamaño del espacio de estados.](images/state_space_size.png){fig-align="center"}
+
 Supongamos que los objetos variables y sus posibilidades correspondientes son las siguientes:
-- **Posiciones de Pacman**: Pacman puede estar en 120 posiciones ($x, y$) distintas, y solo hay un Pacman.
-- **Dirección de Pacman**: Puede mirar al Norte, Sur, Este u Oeste, para un total de 4 posibilidades.
-- **Posiciones de los fantasmas**: Hay dos fantasmas, cada uno de los cuales puede estar en 12 posiciones ($x, y$) distintas.
-- **Configuraciones de las píldoras**: Hay 30 píldoras, cada una de las cuales puede haber sido comida o no.
+
+-   **Posiciones de Pacman**: Pacman puede estar en 120 posiciones ($x, y$) distintas, y solo hay un Pacman.
+
+-   **Dirección de Pacman**: Puede mirar al Norte, Sur, Este u Oeste, para un total de 4 posibilidades.
+
+-   **Posiciones de los fantasmas**: Hay dos fantasmas, cada uno de los cuales puede estar en 12 posiciones ($x, y$) distintas.
+
+-   **Configuraciones de las píldoras**: Hay 30 píldoras, cada una de las cuales puede haber sido comida o no.
 
 Usando el principio fundamental de conteo, tenemos 120 posiciones para Pacman, 4 direcciones en las que puede apuntar, $12 \cdot 12$ configuraciones de fantasmas (12 para cada fantasma), y $2^{30}$ configuraciones de píldoras (cada una de las 30 píldoras tiene dos posibles valores: comida o no comida). Esto nos da un tamaño total del espacio de estados de $120 \cdot 4 \cdot 12^2 \cdot 2^{30}$.
 
-## Gráficos de Espacios de Estados y Árboles de Búsqueda
+## Grafos de Espacios de Estados y Árboles de Búsqueda
 
-Ahora que hemos establecido la idea de un espacio de estados y los cuatro componentes necesarios para definirlo completamente, estamos listos para comenzar a resolver problemas de búsqueda. La última pieza del rompecabezas son los **gráficos de espacios de estados** y los **árboles de búsqueda**.
+Ahora que hemos establecido la idea de un espacio de estados y los cuatro componentes necesarios para definirlo completamente, estamos listos para comenzar a resolver problemas de búsqueda. La última pieza del rompecabezas son los **grafos de espacios de estados** y los **árboles de búsqueda**.
 
-### Gráficos de Espacios de Estados
+### Grafos de Espacios de Estados
 
-Recuerde que un gráfico se define por un conjunto de nodos y un conjunto de aristas que conectan varios pares de nodos. Estas aristas pueden tener pesos asociados. Un **gráfico de espacio de estados** se construye con estados representando nodos, con aristas dirigidas existentes desde un estado hacia sus hijos. Estas aristas representan acciones, y cualquier peso asociado representa el costo de realizar la acción correspondiente. 
+Recuerde que un grafo se define por un conjunto de nodos y un conjunto de aristas que conectan varios pares de nodos. Estas aristas pueden tener pesos asociados. Un **grafo de espacio de estados** se construye con estados representando nodos, con aristas dirigidas existentes desde un estado hacia sus hijos. Estas aristas representan acciones, y cualquier peso asociado representa el costo de realizar la acción correspondiente.
 
-A menudo, los gráficos de espacios de estados son demasiado grandes para almacenarse en memoria (¡incluso nuestro ejemplo simple de Pacman tiene aproximadamente $10^{13}$ estados posibles!), pero son útiles conceptualmente al resolver problemas. Es importante destacar que en un gráfico de espacio de estados, cada estado se representa exactamente una vez; simplemente no hay necesidad de representar un estado múltiples veces, y saber esto ayuda mucho al razonar sobre problemas de búsqueda.
+A menudo, los grafos de espacios de estados son demasiado grandes para almacenarse en memoria (¡incluso nuestro ejemplo simple de Pacman tiene aproximadamente $10^{13}$ estados posibles!), pero son útiles conceptualmente al resolver problemas. Es importante destacar que en un grafo de espacio de estados, cada estado se representa exactamente una vez; simplemente no hay necesidad de representar un estado múltiples veces, y saber esto ayuda mucho al razonar sobre problemas de búsqueda.
 
 ### Árboles de Búsqueda
 
-A diferencia de los gráficos de espacios de estados, los **árboles de búsqueda** no tienen restricción alguna sobre la cantidad de veces que un estado puede aparecer. Esto se debe a que, aunque los árboles de búsqueda también son una clase de gráfico con estados como nodos y acciones como aristas entre estados, cada estado/nodo codifica no solo el estado en sí, sino todo el camino (o plan) desde el estado inicial hasta el estado dado en el gráfico de espacio de estados.
+A diferencia de los grafos de espacios de estados, los **árboles de búsqueda** no tienen restricción alguna sobre la cantidad de veces que un estado puede aparecer.
 
-En el árbol de búsqueda, cada estado incluye toda la historia de cómo se llegó a ese estado, lo que significa que los estados tienden a aparecer varias veces en los árboles de búsqueda porque a menudo existen múltiples formas de llegar de un estado a otro. Como resultado, los árboles de búsqueda son más grandes o iguales en tamaño a sus gráficos de espacio de estados correspondientes.
+Esto se debe a que, aunque los árboles de búsqueda también son una clase de grafo con estados como nodos y acciones como aristas entre estados, cada estado/nodo codifica no solo el estado en sí, sino todo el camino (o plan) desde el estado inicial hasta el estado dado en el grafo de espacio de estados.
+
+![Equivalencia entre un Grafo de Estados y un Árbol de Búsqueda](images/graph_and_tree.png){fig-align="center"}
+
+> El camino resaltado $(S \to d \to e \to r \to f \to G)$ en el grafo del espacio de estados dado se representa en el árbol de búsqueda correspondiente siguiendo el camino en el árbol desde el estado inicial $S$ hasta el estado objetivo resaltado $G$.
+
+En el árbol de búsqueda, cada estado incluye toda la historia de cómo se llegó a ese estado, lo que significa que los estados tienden a aparecer varias veces en los árboles de búsqueda porque a menudo existen múltiples formas de llegar de un estado a otro. Como resultado, los árboles de búsqueda son más grandes o iguales en tamaño a sus grafos de espacio de estados correspondientes.
 
 ### Cómo Manejar el Tamaño de los Espacios de Estados
 
-Ya hemos determinado que incluso para problemas simples, los gráficos de espacios de estados pueden ser enormes. Entonces, surge la pregunta: ¿cómo podemos realizar cálculos útiles sobre estas estructuras si son demasiado grandes para representarlas en memoria? La respuesta radica en cómo calculamos los hijos de un estado actual: solo almacenamos los estados con los que estamos trabajando inmediatamente y calculamos nuevos estados bajo demanda utilizando los métodos correspondientes `getNextState`, `getAction` y `getActionCost`.
+Ya hemos determinado que incluso para problemas simples, los grafos de espacios de estados pueden ser enormes. Entonces, surge la pregunta: ¿cómo podemos realizar cálculos útiles sobre estas estructuras si son demasiado grandes para representarlas en memoria? La respuesta radica en cómo calculamos los hijos de un estado actual: solo almacenamos los estados con los que estamos trabajando inmediatamente y calculamos nuevos estados bajo demanda utilizando los métodos correspondientes `getNextState`, `getAction` y `getActionCost`.
 
 Por lo general, los problemas de búsqueda se resuelven utilizando **árboles de búsqueda**, donde observamos muy cuidadosamente unos pocos nodos a la vez, reemplazando iterativamente nodos con sus hijos hasta que llegamos a un estado objetivo. Existen varios métodos para decidir el orden en que se realiza este reemplazo iterativo de nodos en el árbol de búsqueda, y ahora presentaremos esos métodos.

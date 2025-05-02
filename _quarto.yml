@@ -9,10 +9,22 @@ book:
     - index.qmd
     - intro.qmd
     - agentes.qmd
-    - espacio-estados.qmd
-    - busqueda-no-informada.qmd
-    - busqueda-informada.qmd
-    - satisfaccion-restricciones.qmd
+    - part: "Búsqueda"
+      chapters:
+        - espacio-estados.qmd
+        - busqueda-no-informada.qmd
+        - busqueda-informada.qmd
+    - part: "PSR"
+      chapters:
+        - satisfaccion-restricciones.qmd
+        - solucion-psr.qmd
+        - filtrado-psr.qmd
+        - ordenamiento-psr.qmd
+        - busqueda-local.qmd
+    - part: "Juegos"
+      chapters:
+        - juegos.qmd
+        - minimax.qmd
     - summary.qmd
     - references.qmd
 

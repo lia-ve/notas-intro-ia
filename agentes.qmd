@@ -1,28 +1,39 @@
 # Agentes
 
-En inteligencia artificial, el problema central que se aborda es la creación de un **agente racional**, una entidad que tiene metas o preferencias y trata de realizar una serie de acciones que produzcan el mejor resultado esperado dadas estas metas. Los agentes racionales existen en un **entorno**, que es específico para la instancia particular del agente. Los agentes utilizan **sensores** para interactuar con el entorno y actúan sobre él utilizando **actuadores**. Como un ejemplo muy simple, el entorno para un agente que juega a las damas es el tablero virtual de damas en el que compite contra oponentes, donde los movimientos de las piezas son las acciones. Juntos, un entorno y los agentes que residen en él crean un **mundo**.
+En inteligencia artificial, el problema central que se aborda es la creación de un **agente racional**, una entidad que tiene metas o preferencias y trata de realizar una serie de acciones que produzcan el mejor resultado esperado dadas estas metas.
+
+Los agentes racionales existen en un **entorno**, que es específico para la instancia particular del agente. Los agentes utilizan **sensores** para interactuar con el entorno y actúan sobre él utilizando **actuadores**.
+
+Como un ejemplo muy simple, el entorno para un agente que juega a las damas es el tablero virtual de damas en el que compite contra oponentes, donde los movimientos de las piezas son las acciones. Juntos, un entorno y los agentes que residen en él crean un **mundo**.
 
 ## Tipos de Agentes
 
 ### Agente Reactivo
 
-Un **agente reactivo** no piensa en las consecuencias de sus acciones, sino que selecciona una acción basada únicamente en el estado actual del mundo. Estos agentes suelen ser superados por **agentes planificadores**, que mantienen un modelo del mundo y utilizan este modelo para simular la realización de diversas acciones. Luego, el agente puede determinar las posibles consecuencias hipotéticas de dichas acciones y seleccionar la mejor opción. Esta simulación constituye lo que podríamos interpretar como "inteligencia", ya que es exactamente lo que los humanos hacen cuando intentan determinar la mejor jugada posible en cualquier situación: pensar hacia adelante.
+Un **agente reactivo** no piensa en las consecuencias de sus acciones, sino que selecciona una acción basada únicamente en el estado actual del mundo.
+
+Estos agentes suelen ser superados por **agentes planificadores**, que mantienen un modelo del mundo y utilizan este modelo para simular la realización de diversas acciones.
+
+Luego, el agente puede determinar las posibles consecuencias hipotéticas de dichas acciones y seleccionar la mejor opción. Esta simulación constituye lo que podríamos interpretar como "inteligencia", ya que es exactamente lo que los humanos hacen cuando intentan determinar la mejor jugada posible en cualquier situación: pensar hacia adelante.
 
 ## Descripción del Entorno de Tarea (PEAS)
 
-Para definir el entorno de tarea, usamos la descripción PEAS (**Medida de Rendimiento, Entorno, Actuadores, Sensores**, por las siglas en inglés de **P**erformance, **E**nvironment, **A**ctuators, **S**ensors). La medida de rendimiento describe qué utilidad intenta aumentar el agente. El entorno resume dónde actúa el agente y qué factores afectan al agente. Los actuadores y los sensores son los métodos mediante los cuales el agente actúa sobre el entorno y recibe información de él.
+Para definir el entorno de tarea, usamos la descripción PEAS[^agentes-1] (**Medida de Rendimiento, Entorno, Actuadores, Sensores**).
+
+[^agentes-1]: Por las siglas en inglés de **P**erformance, **E**nvironment, **A**ctuators, **S**ensors.
+
+La medida de rendimiento describe qué utilidad intenta aumentar el agente. El entorno resume dónde actúa el agente y qué factores afectan al agente. Los actuadores y los sensores son los métodos mediante los cuales el agente actúa sobre el entorno y recibe información de él.
 
 ## Características del Entorno
 
 El **diseño** de un agente depende en gran medida del tipo de entorno en el que actúa. Podemos caracterizar los tipos de entornos de las siguientes maneras:
 
-- **Entornos Parcialmente Observables**: En estos entornos, el agente no tiene una visión completa del estado y, por lo tanto, debe mantener una estimación interna del estado del mundo. Esto contrasta con los **entornos completamente observables**, donde el agente tiene acceso completo a la información sobre su estado.
-  
-- **Entornos Estocásticos**: En estos entornos hay incertidumbre en el **modelo de transición**, es decir, tomar una acción en un estado específico puede tener múltiples resultados posibles con diferentes probabilidades. Esto contrasta con los **entornos deterministas**, donde tomar una acción en un estado tiene un solo resultado garantizado.
+-   **Entornos Parcialmente Observables**: En estos entornos, el agente no tiene una visión completa del estado y, por lo tanto, debe mantener una estimación interna del estado del mundo. Esto contrasta con los **entornos completamente observables**, donde el agente tiene acceso completo a la información sobre su estado.
 
-- **Entornos Multiagente**: En estos casos, el agente actúa junto con otros agentes. Por esta razón, el agente podría necesitar **aleatorizar sus acciones** para evitar ser "predecible" para otros agentes.
+-   **Entornos Estocásticos**: En estos entornos hay incertidumbre en el **modelo de transición**, es decir, tomar una acción en un estado específico puede tener múltiples resultados posibles con diferentes probabilidades. Esto contrasta con los **entornos deterministas**, donde tomar una acción en un estado tiene un solo resultado garantizado.
 
-- **Entornos Estáticos**: Si el entorno no cambia mientras el agente actúa sobre él, se llama **estático**. Esto contrasta con los **entornos dinámicos**, que cambian mientras el agente interactúa con ellos.
+-   **Entornos Multiagente**: En estos casos, el agente actúa junto con otros agentes. Por esta razón, el agente podría necesitar **aleatorizar sus acciones** para evitar ser "predecible" para otros agentes.
 
-- **Entornos con Física Conocida**: Si el entorno tiene **física conocida**, entonces el modelo de transición (incluso si es estocástico) es conocido por el agente, y puede usarlo al planificar una ruta. Si la física es desconocida, el agente tendrá que tomar acciones deliberadamente para aprender las dinámicas desconocidas.
+-   **Entornos Estáticos**: Si el entorno no cambia mientras el agente actúa sobre él, se llama **estático**. Esto contrasta con los **entornos dinámicos**, que cambian mientras el agente interactúa con ellos.
 
+-   **Entornos con Física Conocida**: Si el entorno tiene **física conocida**, entonces el modelo de transición (incluso si es estocástico) es conocido por el agente, y puede usarlo al planificar una ruta. Si la física es desconocida, el agente tendrá que tomar acciones deliberadamente para aprender las dinámicas desconocidas.
