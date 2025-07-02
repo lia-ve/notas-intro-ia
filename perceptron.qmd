@@ -1,0 +1,55 @@
+# Perceptrón
+
+## Clasificadores Lineales
+
+La idea central detrás de Naive Bayes es extraer ciertos atributos de los datos de entrenamiento, llamados características (*features*), y luego estimar la probabilidad de una etiqueta dadas esas características: $P(y|f_1, f_2, \ldots, f_n)$. Así, dado un nuevo punto de datos, podemos extraer las características correspondientes y clasificar el nuevo punto con la etiqueta de mayor probabilidad dadas esas características. Sin embargo, esto requiere estimar distribuciones, lo cual hicimos con la estimación de máxima verosimilitud (MLE). ¿Qué pasaría si en su lugar decidiéramos no estimar la distribución de probabilidad? Comencemos examinando un clasificador lineal simple, que podemos usar para la **clasificación binaria**, donde la etiqueta tiene dos posibilidades: positiva o negativa.
+
+La idea básica de un **clasificador lineal** es realizar la clasificación utilizando una combinación lineal de las características, un valor que denominamos **activación**. Concretamente, la función de activación toma un punto de datos, multiplica cada característica de nuestro punto de datos, $f_i(\mathbf{x})$, por un peso correspondiente, $w_i$, y produce la suma de todos los valores resultantes. En forma vectorial, también podemos escribir esto como un producto punto de nuestros pesos como un vector, $\mathbf{w}$, y nuestro punto de datos "caracterizado" como un vector $\mathbf{f}(\mathbf{x})$:
+
+$$\text{activación}_w(\mathbf{x}) = h_{\mathbf{w}}(\mathbf{x}) = \sum_i w_i f_i(\mathbf{x}) = \mathbf{w}^T \mathbf{f}(\mathbf{x}) = \mathbf{w} \cdot \mathbf{f}(\mathbf{x})$$
+
+¿Cómo se realiza la clasificación utilizando la activación? Para la clasificación binaria, cuando la activación de un punto de datos es positiva, clasificamos ese punto de datos con la etiqueta positiva, y si es negativa, lo clasificamos con la etiqueta negativa:
+
+$$
+\text{clasificar}(\mathbf{x}) = \begin{cases}
++   & \text{si} & h_{\mathbf{w}}(\mathbf{x}) > 0 \\
+-   & \text{si} & h_{\mathbf{w}}(\mathbf{x}) < 0 \end{cases}
+$$
+
+Para entender esto geométricamente, reexaminemos la función de activación vectorizada. Podemos reescribir el producto punto de la siguiente manera, donde $|\cdot|$ es el operador de magnitud y $\theta$ es el ángulo entre $\mathbf{w}$ y $\mathbf{f}(\mathbf{x})$:
+
+$$
+h_{\mathbf{w}}(\mathbf{x}) = \mathbf{w} \cdot \mathbf{f}(\mathbf{x}) = \|\mathbf{w}\| \|\mathbf{f}(\mathbf{x})\| \cos(\theta)
+$$
+
+![Clasificador](images/linear_classifier_fig3.png){fig-align="center"}
+
+Dado que las magnitudes son siempre no negativas y nuestra regla de clasificación se basa en el signo de la activación, el único término que importa para determinar la clase es $\cos(\theta)$:
+
+\$\$ \text{clasificar}(\mathbf{x}) =
+
+\begin{cases}
+
++   & \text{si} & \cos(\theta) > 0 \\
+-   & \text{si} & \cos(\theta) < 0 \end{cases}
+
+\$\$
+
+Por lo tanto, nos interesa saber cuándo $\cos(\theta)$ es negativo o positivo. Es fácil ver que para $\theta < \frac{\pi}{2}$, $\cos(\theta)$ estará en el intervalo $(0, 1]$, que es positivo. Para $\theta > \frac{\pi}{2}$, $\cos(\theta)$ estará en el intervalo $[-1, 0)$, que es negativo. Puedes confirmarlo mirando un círculo unitario. Esencialmente, nuestro clasificador lineal simple está verificando si el vector de características de un nuevo punto de datos "apunta" aproximadamente en la misma dirección que un vector de pesos predefinido y aplica una etiqueta positiva si lo hace:
+
+$$
+\text{clasificar}(\mathbf{x}) = \begin{cases}
++   & \text{si} & \theta < \frac{\pi}{2} \text{ (es decir, cuando} & \theta \text{ es menor de 90°, o agudo)} \\
+-   & \text{si} & \theta > \frac{\pi}{2} \text{ (es decir, cuando} & \theta \text{ es mayor de 90°, u obtuso)}
+\end{cases}
+$$
+
+Hasta este punto, no hemos considerado los puntos donde $\text{activación}_w(\mathbf{x}) = \mathbf{w}^T \mathbf{f}(\mathbf{x}) = 0$. Siguiendo la misma lógica, veremos que $\cos(\theta) = 0$ para esos puntos. Además, $\theta = \frac{\pi}{2}$ (es decir, $\theta$ es 90°) para esos puntos. En otras palabras, estos son los puntos de datos con vectores de características que son ortogonales a $\mathbf{w}$. Podemos agregar una línea azul punteada, ortogonal a $\mathbf{w}$, donde cualquier vector de características que se encuentre en esta línea tendrá una activación igual a $0$:
+
+![Frontera de decisión](images/linear_classifier_fig4.png){fig-align="center"}
+
+Llamamos a esta línea azul la **frontera de decisión** porque es el límite que separa la región donde clasificamos los puntos de datos como positivos de la región de negativos. En dimensiones superiores, una frontera de decisión lineal se denomina genéricamente **hiperplano**. Un hiperplano es una superficie lineal que tiene una dimensión menos que el espacio latente, dividiendo así la superficie en dos. Para clasificadores generales (no lineales), la frontera de decisión puede no ser lineal, pero se define simplemente como una superficie en el espacio de vectores de características que separa las clases. Para clasificar puntos que terminan en la frontera de decisión, podemos aplicar cualquiera de las etiquetas, ya que ambas clases son igualmente válidas (en los algoritmos a continuación, clasificaremos los puntos en la línea como positivos).
+
+![x clasificado en clase positiva](images/linear_classifier_fig5.png){fig-align="center"}
+
+![x clasificado en clase negativa](images/linear_classifier_fig6.png){fig-align="center"}
