@@ -1,0 +1,196 @@
+# Naive Bayes
+
+Vamos a motivar nuestra discusión sobre el aprendizaje automático con un ejemplo concreto de un algoritmo de aprendizaje automático. Consideremos el problema común de construir un filtro de correo electrónico no deseado (spam), que clasifica los mensajes en spam (correo no deseado) o ham (correo deseado). Este tipo de problema se denomina **problema de clasificación**: dadas varias unidades de datos (en este caso, cada correo electrónico es una unidad de datos), nuestro objetivo es agruparlas en una de dos o más **clases**. Para los problemas de clasificación, se nos proporciona un conjunto de entrenamiento de unidades de datos junto con sus **etiquetas** correspondientes, que suelen ser uno de varios valores discretos.
+
+Nuestro objetivo será utilizar estos datos de entrenamiento (correos electrónicos y una etiqueta de spam/ham para cada uno) para aprender algún tipo de relación que podamos usar para hacer predicciones sobre correos electrónicos no vistos previamente. En esta sección, describiremos cómo construir un tipo de modelo para resolver problemas de clasificación conocido como **Clasificador Naive Bayes**.
+
+![Agente clasificador](images/robot.png){fig-align="center"}
+
+Para entrenar un modelo que clasifique los correos electrónicos como spam o ham, necesitamos algunos datos de entrenamiento que consistan en correos electrónicos previamente clasificados de los que podamos aprender. Sin embargo, los correos electrónicos son simplemente cadenas de texto, y para aprender algo útil, necesitamos extraer ciertos atributos de cada uno de ellos, conocidos como **características (features)**. Las características pueden ser cualquier cosa, desde recuentos de palabras específicas hasta patrones de texto (por ejemplo, si las palabras están en mayúsculas o no), o prácticamente cualquier otro atributo de los datos que puedas imaginar.
+
+Las características específicas extraídas para el entrenamiento a menudo dependen del problema específico que se intenta resolver, y las características que decidas seleccionar pueden afectar drásticamente el rendimiento de tu modelo. Decidir qué características utilizar se conoce como **ingeniería de características**, y es fundamental para el aprendizaje automático, pero para los propósitos de este curso, puedes asumir que siempre se te darán las características extraídas para cualquier conjunto de datos. En esta nota, **f(x)** se refiere a una función de características aplicada a todas las entradas **x** antes de introducirlas en el modelo.
+
+Ahora, supongamos que tienes un diccionario de $n$ palabras, y de cada correo electrónico, extraes un vector de características $F \in \mathbb{R}^{n}$, donde la $i$-ésima entrada en $F$ es una variable aleatoria $F_i$, que puede tomar un valor de $0$ o $1$, dependiendo de si la $i$-ésima palabra en tu diccionario aparece en el correo electrónico en consideración. Por ejemplo, si $F_{200}$ es la característica para la palabra *gratis*, tendremos $F_{200} = 1$ si *gratis* aparece en el correo electrónico, y $0$ si no aparece.
+
+Con estas definiciones, podemos definir más concretamente cómo predecir si un correo electrónico es spam o ham: si podemos generar una tabla de probabilidad conjunta entre cada $F_i$ y la etiqueta $Y$, podemos calcular la probabilidad de que cualquier correo electrónico en consideración sea spam o ham dado su vector de características. Específicamente, podemos calcular ambos
+
+$$P(Y = \text{spam} | F_1 = f_1, \dots, F_n = f_n)$$
+
+$$P(Y = \text{ham} | F_1 = f_1, \dots, F_n = f_n)$$
+
+y simplemente etiquetar el correo electrónico según cuál de las dos probabilidades sea mayor.
+
+Desafortunadamente, dado que tenemos $n$ características y $1$ etiqueta, cada una de las cuales puede tomar $2$ valores distintos, la tabla de probabilidad conjunta correspondiente a esta distribución exige un tamaño de tabla exponencial en$n$, con $2^{n+1}$ entradas, ¡lo cual es muy poco práctico!. Este problema se resuelve modelando la tabla de probabilidad conjunta con una red bayesiana, haciendo la suposición simplificadora crítica de que cada característica $F_i$ es independiente de todas las demás dada la etiqueta de clase.
+
+Esta es una suposición de modelado muy fuerte (y la razón por la que Naive Bayes se llama *naive*), pero simplifica la inferencia y generalmente funciona bien en la práctica. Conduce a la siguiente red bayesiana para representar nuestra distribución de probabilidad conjunta deseada.
+
+-\> imagen nbmodel
+
+Las reglas de separación-$d$ dejan claro que en esta red bayesiana, cada $F_i$ es condicionalmente independiente de todas las demás, dado $Y$. Ahora tenemos una tabla para $P(Y)$ con 2 entradas y $n$ tablas para cada $P(F_i | Y)$, cada una con $2^2 = 4$ entradas para un total de $4n + 2$ entradas, ¡lineal en $n$! Esta suposición simplificadora destaca el compromiso que surge del concepto de **eficiencia estadística**; a veces necesitamos comprometer la complejidad de nuestro modelo para mantenernos dentro de los límites computacionales.
+
+De hecho, en los casos en que el número de características es suficientemente bajo, es común hacer más suposiciones sobre las relaciones entre las características para generar un modelo mejor (lo que corresponde a añadir aristas a tu red bayesiana). Con este modelo, hacer predicciones para puntos de datos desconocidos equivale a ejecutar una inferencia en nuestra red bayesiana. Hemos observado valores para $F_1, \dots, F_n$ y queremos elegir el valor de $Y$ que tenga la probabilidad más alta condicionada a estas características:
+
+\$\$ \\text{predicción}(f_1, \\cdots, f_n) = \\underset{y}{\\text{argmax}}\~P(Y=y \\mid F_1=f_1, \\ldots, F_N = f_n) \\ = \\underset{y}{\\text{argmax}}\~P(Y=y, F_1=f_1, \\ldots, F_N = f_n) \\ = \\underset{y}{\\text{argmax}}\~P(Y=y) \\prod\_{i=1}\^n P(F_i = f_i \\mid Y=y) \$
+
+El primer paso se debe a que la clase de mayor probabilidad será la misma en la distribución normalizada o no normalizada, y el segundo proviene directamente de la suposición de independencia de Naive Bayes de que las características son independientes dada la etiqueta de clase (como se ve en la estructura del modelo gráfico).
+
+Generalizando, más allá de un filtro de spam, supongamos ahora que hay $k$ etiquetas de clase (valores posibles para$Y$). Además, después de notar que nuestras probabilidades deseadas —la probabilidad de cada etiqueta $y_i$ dadas nuestras características, $P(Y = y_i | F_1 = f_1, \dots, F_n = f_n)$ — son proporcionales a la probabilidad conjunta $P(Y = y_i, F_1 = f_1, \dots, F_n = f_n)$, podemos calcular:
+
+$$
+P(Y, F\_1 = f\_1, \\dots, F\_n = f\_n) =
+\\begin{bmatrix}
+P(Y = y\_1, F\_1 = f\_1, \\dots, F\_n = f\_n) \\
+P(Y = y\_2, F\_1 = f\_1, \\dots, F\_n = f\_n) \\
+\\vdots \\
+P(Y = y\_k, F\_1 = f\_1, \\dots, F\_n = f\_n)
+\\end{bmatrix}
+$$
+
+$$
+= \\begin{bmatrix}
+P(Y = y\_1)\\prod\_i P(F\_i = f\_i | Y = y\_1) \\
+P(Y = y\_2)\\prod\_i P(F\_i = f\_i | Y = y\_2) \\
+\\vdots \\
+P(Y = y\_k)\\prod\_i P(F\_i = f\_i | Y = y\_k)
+\\end{bmatrix}
+$$
+
+Nuestra predicción para la etiqueta de clase correspondiente al vector de características $F$ es simplemente la etiqueta que corresponde al valor máximo en el vector calculado anteriormente:
+
+$$\text{predicción}(F) = \underset{y_i}{\text{argmax}}~P(Y = y_i)\prod_j P(F_j = f_j | Y = y_i)$$
+
+Ahora hemos aprendido la teoría básica detrás de las suposiciones de modelado del clasificador Naive Bayes y cómo hacer predicciones con él, pero aún no hemos abordado cómo se aprenden exactamente las tablas de probabilidad condicional utilizadas en nuestra red bayesiana a partir de los datos de entrada. Esto tendrá que esperar a nuestro próximo tema de discusión, la **estimación de parámetros**.
+
+## Estimación de Parámetros
+
+Supongamos que tienes un conjunto de **puntos de muestra** u **observaciones**, $x_1, \ldots, x_N$, y crees que estos datos fueron extraídos de una distribución **parametrizada** por un valor desconocido $\theta$. En otras palabras, crees que la probabilidad $P_{\theta}(x_i)$ de cada una de tus observaciones es una función de $\theta$. Por ejemplo, podríamos estar lanzando una moneda que tiene una probabilidad $\theta$ de caer cara.
+
+¿Cómo puedes "aprender" el valor más probable de $\theta$ dada tu muestra? Por ejemplo, si tenemos 10 lanzamientos de moneda y vimos que 7 de ellos fueron cara, ¿qué valor deberíamos elegir para $\theta$? Una respuesta a esta pregunta es inferir que $\theta$ es igual al valor que maximiza la probabilidad de haber seleccionado tu muestra $x_1, \ldots, x_N$ de tu distribución de probabilidad asumida. Un método fundamental y frecuentemente utilizado en el aprendizaje automático conocido como **estimación de máxima verosimilitud** (MLE) hace exactamente esto.
+
+La estimación de máxima verosimilitud típicamente hace las siguientes suposiciones simplificadoras:
+
+-   Cada muestra se extrae de la misma distribución. En otras palabras, cada $x_i$ está **idénticamente distribuida**. En nuestro ejemplo de lanzamiento de moneda, cada lanzamiento de moneda tiene la misma probabilidad, $\theta$, de caer cara.
+-   Cada muestra $x_i$ es **condicionalmente independiente** de las demás, dados los parámetros de nuestra distribución. Esta es una suposición fuerte, pero como veremos, ayuda en gran medida a simplificar el problema de la estimación de máxima verosimilitud y generalmente funciona bien en la práctica. En el ejemplo del lanzamiento de moneda, el resultado de un lanzamiento no afecta a los demás.
+-   Todos los valores posibles de $\theta$ son igualmente probables antes de que hayamos visto cualquier dato (esto se conoce como una **prior uniforme**).
+
+Las dos primeras suposiciones anteriores a menudo se denominan **independientes e idénticamente distribuidas** (i.i.d.). La tercera suposición anterior hace que el método MLE sea un caso especial del método de máxima a posteriori (MAP), que permite priors no uniformes.
+
+Definamos ahora la **verosimilitud** $\mathcal{L}(\theta)$ de nuestra muestra, una función que representa la probabilidad de haber extraído nuestra muestra de nuestra distribución. Para una muestra fija $x_1, \ldots, x_N$, la verosimilitud es simplemente una función de $\theta$:
+
+$$\mathcal{L}(\theta) = P_{\theta}(x_1, \ldots, x_N)$$
+
+Usando nuestra suposición simplificadora de que las muestras $x_i$ son i.i.d., la función de verosimilitud puede reexpresarse de la siguiente manera:
+
+$$\mathcal{L}(\theta) = \prod_{i=1}^N P_{\theta}(x_i)$$
+
+¿Cómo podemos encontrar el valor de $\theta$ que maximiza esta función? Este será el valor de$\theta$que mejor explique los datos que vimos. Recordemos del cálculo que en los puntos donde se realizan los máximos y mínimos de una función, su primera derivada con respecto a cada una de sus entradas (también conocida como el **gradiente** de la función) debe ser igual a cero. Por lo tanto, la estimación de máxima verosimilitud para$\theta$ es un valor que satisface la siguiente ecuación:
+
+$$\frac{\partial}{\partial\theta} \mathcal{L}(\theta) = 0$$
+
+Veamos un ejemplo para concretar este concepto. Supongamos que tienes una bolsa llena de bolas rojas y azules y no sabes cuántas hay de cada color. Sacas muestras tomando una bola de la bolsa, anotando el color y luego volviendo a poner la bola (muestreo con reemplazo). Sacar una muestra de tres bolas de esta bolsa da como resultado `rojo`, `rojo`, `azul`. Esto parece implicar que deberíamos inferir que $\frac{2}{3}$ de las bolas de la bolsa son rojas y $\frac{1}{3}$ de las bolas son azules. Asumiremos que cada bola que se saque de la bolsa será roja con probabilidad $\theta$ y azul con probabilidad $1 - \theta$, para algún valor $\theta$ que queremos estimar (esto se conoce como una distribución de Bernoulli):
+
+$$
+P\_{\\theta}(x\_i) =
+\\begin{cases}
+\\theta & \\text{si } x\_i = \\text{rojo} \\
+1 - \\theta & \\text{si } x\_i = \\text{azul}
+\\end{cases}
+$$
+
+La verosimilitud de nuestra muestra es entonces:
+
+$$\mathcal{L}(\theta) = \prod_{i=1}^3 P_{\theta}(x_i) = P_{\theta}(x_1 = \text{rojo}) \cdot P_{\theta}(x_2 = \text{rojo}) \cdot P_{\theta}(x_3 = \text{azul}) = \theta^2 \cdot (1 - \theta)$$
+
+El paso final es establecer la derivada de la verosimilitud en $$0$$y resolver para$$\theta$$:
+
+$$\frac{\partial}{\partial\theta} \mathcal{L}(\theta) = \frac{\partial}{\partial\theta} \left( \theta^2 \cdot (1 - \theta) \right) = \theta (2 - 3\theta) = 0$$
+
+Resolver esta ecuación para $\theta$ produce $\theta = \frac{2}{3}$, ¡lo cual tiene sentido intuitivamente! (Hay una segunda solución, también, $\theta = 0$-- pero esto corresponde a un mínimo de la función de verosimilitud, ya que $\mathcal{L}(0) = 0 < \mathcal{L}(\frac{2}{3}) = \frac{4}{27}$.)
+
+## Máxima Verosimilitud para Naive Bayes
+
+Volvamos ahora al problema de inferir tablas de probabilidad condicional para nuestro clasificador de spam, comenzando con un resumen de las variables que conocemos:
+
+-   $n$ - el número de palabras en nuestro diccionario.
+-   $N$- el número de observaciones (correos electrónicos) que tenemos para el entrenamiento. Para nuestra próxima discusión, definamos también $N_h$ como el número de muestras de entrenamiento etiquetadas como ham y $N_s$ como el número de muestras de entrenamiento etiquetadas como spam. Nótese que $N_h + N_s = N$.
+-   $F_i$- una variable aleatoria que es$1$si la $i$-ésima palabra del diccionario está presente en un correo electrónico en consideración, y $0$ en caso contrario.
+-   $Y$ - una variable aleatoria que es `spam` o `ham` dependiendo de la etiqueta del correo electrónico correspondiente.
+-   $f_i^{(j)}$- esto hace referencia al valor resuelto de la variable aleatoria$F_i$en el$j$-ésimo elemento del conjunto de entrenamiento. En otras palabras, cada $f_i^{(j)}$ es un $1$ si la palabra $i$ apareció en el $j$-ésimo correo electrónico en consideración y $0$ en caso contrario. Esta es la primera vez que vemos esta notación, pero será útil en la próxima derivación.
+
+**Aviso**: Puedes omitir la siguiente derivación matemática. Solo se necesita conocer el resultado de la derivación resumida en el párrafo al final de esta sección.
+
+Ahora, dentro de cada tabla de probabilidad condicional $P(F_i | Y)$, tenga en cuenta que tenemos dos distribuciones de Bernoulli distintas: $P(F_i | Y = ham)$ y $P(F_i | Y = spam)$. Para simplificar, consideremos específicamente $P(F_i | Y = ham)$ e intentemos encontrar la estimación de máxima verosimilitud para un parámetro $\theta = P(F_i = 1 | Y = ham)$, es decir, la probabilidad de que la $i$-ésima palabra en nuestro diccionario aparezca en un correo electrónico ham. Dado que tenemos $N_h$ correos electrónicos ham en nuestro conjunto de entrenamiento, tenemos $N_h$ observaciones de si la palabra $i$ apareció o no en un correo electrónico ham. Debido a que nuestro modelo asume una distribución de Bernoulli para la aparición de cada palabra dada su etiqueta, podemos formular nuestra función de verosimilitud de la siguiente manera:
+
+$$\mathcal{L}(\theta) = \prod_{j=1}^{N_h}P(F_i = f_i^{(j)}| Y = ham) = \prod_{j=1}^{N_h}\theta^{f_i^{(j)}}(1 - \theta)^{1 - f_i^{(j)}}$$
+
+El segundo paso proviene de un pequeño truco matemático: si $f_i^{(j)} = 1$ entonces
+
+$$P(F_i = f_i^{(j)}| Y = ham) = \theta^1(1 - \theta)^0 = \theta$$
+
+y de manera similar si $$f_i^{(j)} = 0$$ entonces
+
+$$P(F_i = f_i^{(j)}| Y = ham) = \theta^0(1 - \theta)^1 = (1 - \theta)$$
+
+Para calcular la estimación de máxima verosimilitud para $\theta$, recordemos que el siguiente paso es calcular la derivada de $\mathcal{L}(\theta)$ e igualarla a $0$. Intentar esto resulta bastante difícil, ya que no es tarea sencilla aislar y resolver para $\theta$. En su lugar, emplearemos un truco muy común en las derivaciones de máxima verosimilitud, que consiste en encontrar el valor de $\theta$ que maximiza el $\log$ de la función de verosimilitud. Debido a que$\log(x)$ es una función estrictamente creciente (a veces denominada **transformación monótona**), encontrar un valor que maximice $\log \mathcal{L}(\theta)$ también maximizará $\mathcal{L}(\theta)$. La expansión de $\log{\mathcal{L}(\theta)}$ se muestra a continuación:
+
+$$\log{\mathcal{L}(\theta)} = \log\bigg(\prod_{j=1}^{N_h}\theta^{f_i^{(j)}}(1 - \theta)^{1 - f_i^{(j)}}\bigg)$$
+
+$$= \sum_{j=1}^{N_h}\log\big(\theta^{f_i^{(j)}}(1 - \theta)^{1 - f_i^{(j)}}\big)$$
+
+$$= \sum_{j=1}^{N_h}\log\big(\theta^{f_i^{(j)}}\big) + \sum_{j=1}^{N_h}\log\big((1 - \theta)^{1 - f_i^{(j)}}\big)$$
+
+$$= \log(\theta)\sum_{j=1}^{N_h}f_i^{(j)} + \log(1 - \theta)\sum_{j=1}^{N_h}(1 - f_i^{(j)})$$
+
+Obsérvese que en la derivación anterior, hemos utilizado las propiedades de la función logaritmo de que $\log(a^c) = c \cdot \log(a)$ y $\log(ab) = \log(a) + \log(b)$. Ahora igualamos la derivada del logaritmo de la función de verosimilitud a $0$ y resolvemos para $\theta$:
+
+$$\frac{\partial}{\partial\theta}\bigg(\log(\theta)\sum_{j=1}^{N_h}f_i^{(j)} + \log(1 - \theta)\sum_{j=1}^{N_h}(1 - f_i^{(j)})\bigg) = 0$$
+
+$$\frac{1}{\theta}\sum_{j=1}^{N_h}f_i^{(j)} - \frac{1}{(1 - \theta)}\sum_{j=1}^{N_h}(1 - f_i^{(j)}) = 0$$
+
+$$\frac{1}{\theta}\sum_{j=1}^{N_h}f_i^{(j)} = \frac{1}{(1 - \theta)}\sum_{j=1}^{N_h}(1 - f_i^{(j)})$$
+
+$$(1 - \theta)\sum_{j=1}^{N_h}f_i^{(j)} = \theta\sum_{j=1}^{N_h}(1 - f_i^{(j)})$$
+
+$$\sum_{j=1}^{N_h}f_i^{(j)} - \theta\sum_{j=1}^{N_h}f_i^{(j)} = \theta\sum_{j=1}^{N_h}1 - \theta\sum_{j=1}^{N_h}f_i^{(j)}$$
+
+$$\sum_{j=1}^{N_h}f_i^{(j)} = \theta \cdot N_h$$
+
+$$\theta = \frac{1}{N_h}\sum_{j=1}^{N_h}f_i^{(j)}$$
+
+¡Hemos llegado a un resultado final notablemente simple! Según nuestra fórmula anterior, la estimación de máxima verosimilitud para $\theta$ (que, recordemos, es la probabilidad de que $P(F_i = 1 | Y = ham)$) corresponde a contar el número de correos electrónicos ham en los que aparece la palabra $i$ y dividirlo por el número total de correos electrónicos ham.
+
+Puedes pensar que esto fue mucho trabajo para un resultado intuitivo (y lo fue), pero la derivación y las técnicas serán útiles para distribuciones más complejas que la simple distribución de Bernoulli que estamos usando para cada característica aquí. En resumen, en este modelo Naive Bayes con distribuciones de características de Bernoulli, dentro de cualquier clase dada, la estimación de máxima verosimilitud para la probabilidad de cualquier resultado corresponde al recuento del resultado dividido por el número total de muestras para la clase dada. La derivación anterior se puede generalizar a casos en los que tenemos más de dos clases y más de dos resultados para cada característica, aunque esta derivación no se proporciona aquí.
+
+## Suavizado (Smoothing)
+
+Aunque la estimación de máxima verosimilitud es un método muy potente para la estimación de parámetros, los datos de entrenamiento deficientes a menudo pueden conducir a consecuencias desafortunadas. Por ejemplo, si cada vez que la palabra "minuto" aparece en un correo electrónico en nuestro conjunto de entrenamiento, ese correo electrónico se clasifica como spam, nuestro modelo entrenado aprenderá que
+
+$$P(F_{minute} = 1 | Y = ham) = 0$$
+
+Por lo tanto, en un correo electrónico no visto, si la palabra `minuto` aparece alguna vez,
+
+$$P(Y = ham) \prod_i P(F_i | Y = ham) = 0$$
+
+y así, tu modelo nunca clasificará ningún correo electrónico que contenga la palabra `minuto` como ham. Este es un ejemplo clásico de **sobreajuste (overfitting)**, o la construcción de un modelo que no se generaliza bien a datos previamente no vistos. El hecho de que una palabra específica no apareciera en un correo electrónico en tus datos de entrenamiento no significa que no aparecerá en un correo electrónico en tus datos de prueba o en el mundo real.
+
+El sobreajuste con los clasificadores Naive Bayes se puede mitigar mediante el **suavizado de Laplace**. Conceptualmente, el suavizado de Laplace con fuerza $k$ asume haber visto$k$adicionales de cada resultado. Por lo tanto, si para una muestra dada tu estimación de máxima verosimilitud para un resultado $x$ que puede tomar $|X|$ valores diferentes de una muestra de tamaño $N$ es
+
+$$P_{MLE}(x) = \frac{count(x)}{N}$$
+
+entonces la estimación de Laplace con fuerza $k$ es
+
+$$P_{LAP, k}(x) = \frac{count(x) + k}{N + k|X|}$$
+
+¿Qué dice esta ecuación? Hemos hecho la suposición de ver $k$ instancias adicionales de cada resultado, y así actuamos como si hubiéramos visto $count(x) + k$ en lugar de $count(x)$ instancias de $x$. De manera similar, si vemos $k$ instancias adicionales de cada una de las $|X|$ clases, entonces debemos sumar $k|X|$ a nuestro número original de muestras $N$. Juntas, estas dos afirmaciones producen la fórmula anterior. Un resultado similar se aplica para calcular las estimaciones de Laplace para condicionales (lo cual es útil para calcular estimaciones de Laplace para resultados en diferentes clases):
+
+$$P_{LAP, k}(x|y) = \frac{count(x, y) + k}{count(y) + k|X|}$$
+
+Hay dos casos particularmente notables para el suavizado de Laplace. El primero es cuando $k = 0$, entonces
+
+$$P_{LAP, 0}(x) = P_{MLE}(x)$$
+
+El segundo es el caso donde $k = \infty$. Observar un número muy grande, infinito, de cada resultado hace que los resultados de tu muestra real sean intrascendentes y, por lo tanto, tus estimaciones de Laplace implican que cada resultado es igualmente probable. De hecho:
+
+$$P_{LAP, \infty}(x) = \frac{1}{|X|}$$
+
+El valor específico de $k$ que es apropiado usar en tu modelo se determina típicamente por prueba y error. $k$ es un hiperparámetro en tu modelo, lo que significa que puedes establecerlo en lo que quieras y ver qué valor produce la mejor precisión/rendimiento de predicción en tus datos de validación.
