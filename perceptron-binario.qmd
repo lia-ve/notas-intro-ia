@@ -1,0 +1,175 @@
+# Perceptrón Binario
+
+Excelente, ahora sabes cómo funcionan los clasificadores lineales, pero ¿cómo construir uno bueno? Al construir un clasificador, se comienza con datos etiquetados con la clase correcta; a esto lo llamamos **conjunto de entrenamiento**. Se construye un clasificador evaluándolo en los datos de entrenamiento, comparando los resultados con las etiquetas de entrenamiento y ajustando los parámetros del clasificador hasta alcanzar el objetivo.
+
+Exploremos una implementación específica de un clasificador lineal simple: el perceptrón binario. El perceptrón es un clasificador binario, aunque puede extenderse para trabajar con más de dos clases. El objetivo del perceptrón binario es encontrar un límite de decisión que separe perfectamente los datos de entrenamiento. En otras palabras, buscamos los mejores pesos posibles —el mejor $\mathbf{w}$— de modo que cualquier punto de entrenamiento caracterizado que se multiplique por los pesos pueda clasificarse perfectamente.
+
+## El Algoritmo
+
+El algoritmo del perceptrón funciona de la siguiente manera:
+
+1.  Inicializar todos los pesos a 0: $\mathbf{w} = \mathbf{0}$
+
+2.  Para cada muestra de entrenamiento, con características $\mathbf{f}(\mathbf{x})$ y etiqueta de clase verdadera $y^* \in {-1, +1}$, hacer:
+
+    2.1 Clasificar la muestra utilizando los pesos actuales. Sea $y$ la clase predicha por tu $\mathbf{w}$ actual:
+
+    $$
+    y = \text{clasificar}(\mathbf{x}) =
+    \begin{cases}
+    +1 & \text{si} & h_{\mathbf{w}}(\mathbf{x}) = \mathbf{w}^T \mathbf{f}(\mathbf{x}) > 0 \\
+    -1 & \text{si} & h_{\mathbf{w}}(\mathbf{x}) = \mathbf{w}^T \mathbf{f}(\mathbf{x}) < 0
+    \end{cases}
+    $$
+
+    2.2 Comparar la etiqueta predicha $y$ con la etiqueta verdadera $y^*$:
+
+    -   Si $y = y^*$, no hacer nada.
+    -   En caso contrario, si $y \neq y^*$, actualizar los pesos: $\mathbf{w} \leftarrow \mathbf{w} + y^* \mathbf{f}(\mathbf{x})$
+
+3.  Si se revisó **cada** muestra de entrenamiento sin tener que actualizar los pesos (todas las muestras se predijeron correctamente), entonces el algoritmo termina. De lo contrario, repetir el paso 2.
+
+## Actualización de Pesos
+
+Examinemos y justifiquemos el procedimiento para actualizar nuestros pesos. Recordemos que en el paso 2b anterior, cuando nuestro clasificador es correcto, nada cambia. Pero cuando nuestro clasificador se equivoca, el vector de pesos se actualiza de la siguiente manera:
+
+$$
+\mathbf{w} \leftarrow \mathbf{w} + y^* \mathbf{f}(\mathbf{x})
+$$
+
+donde $y^*$ es la etiqueta verdadera, que es 1 o -1, y $\mathbf{x}$ es la muestra de entrenamiento que clasificamos erróneamente. Puedes interpretar esta regla de actualización de la siguiente manera:
+
+**Caso 1:** Se clasificó incorrectamente un positivo como negativo.
+
+$$
+\mathbf{w} \leftarrow \mathbf{w} + \mathbf{f}(\mathbf{x})
+$$
+
+**Caso 2:** Se clasificó incorrectamente un negativo como positivo.
+
+$$
+\mathbf{w} \leftarrow \mathbf{w} - \mathbf{f}(\mathbf{x})
+$$
+
+¿Por qué funciona esto? Una forma de verlo es como un acto de equilibrio. La clasificación errónea ocurre cuando la activación para una muestra de entrenamiento es mucho menor de lo que debería ser (lo que provoca una clasificación errónea del Caso 1) o mucho mayor de lo que debería ser (lo que provoca una clasificación errónea del Caso 2).
+
+Consideremos el Caso 1, donde la activación es negativa cuando debería ser positiva. En otras palabras, la activación es demasiado pequeña. La forma en que ajustamos $\mathbf{w}$ debe esforzarse por corregir eso y hacer que la activación sea mayor para esa muestra de entrenamiento. Para convencerte de que nuestra regla de actualización $\mathbf{w} \leftarrow \mathbf{w} + \mathbf{f}(\mathbf{x})$ hace eso, actualicemos $\mathbf{w}$ y veamos cómo cambia la activación.
+
+$$
+h_{\mathbf{w} + \mathbf{f}(\mathbf{x})}(\mathbf{x}) = (\mathbf{w} + \mathbf{f}(\mathbf{x}))^T \mathbf{f}(\mathbf{x}) = \mathbf{w}^T \mathbf{f}(\mathbf{x}) + \mathbf{f}(\mathbf{x})^T \mathbf{f}(\mathbf{x}) = h_{\mathbf{w}}(\mathbf{x}) + \mathbf{f}(\mathbf{x})^T \mathbf{f}(\mathbf{x})
+$$
+
+Usando nuestra regla de actualización, vemos que la nueva activación aumenta en $\mathbf{f}(\mathbf{x})^T\mathbf{f}(\mathbf{x})$, que es un número positivo, lo que demuestra que nuestra actualización tiene sentido. La activación se está volviendo más grande, más cerca de volverse positiva. Puedes repetir la misma lógica para cuando el clasificador está clasificando erróneamente porque la activación es demasiado grande (la activación es positiva cuando debería ser negativa). Verás que la actualización hará que la nueva activación disminuya en $\mathbf{f}(\mathbf{x})^T\mathbf{f}(\mathbf{x})$, haciéndose así más pequeña y más cerca de clasificar correctamente.
+
+Si bien esto deja claro por qué estamos sumando y restando *algo*, ¿por qué querríamos sumar y restar las características de nuestra muestra? Una buena manera de pensarlo es que los pesos no son lo único que determina esta puntuación. La puntuación se determina multiplicando los pesos por la muestra relevante. Esto significa que ciertas partes de una muestra contribuyen más que otras. Considera la siguiente situación donde $\mathbf{x}$ es una muestra de entrenamiento que se nos da con la etiqueta verdadera $y^*$ = -1:
+
+$$
+\mathbf{w}^T = \begin{bmatrix}2 & 2 & 2\end{bmatrix}, \quad \mathbf{f}(\mathbf{x}) = \begin{bmatrix}4 \\ 0 \\ 1\end{bmatrix} \quad h_{\mathbf{w}}(\mathbf{x}) = (2 \times 4) + (2 \times 0) + (2 \times 1) = 10
+$$
+
+Sabemos que nuestros pesos deben ser más pequeños porque la activación debe ser negativa para clasificar correctamente. Sin embargo, no queremos cambiarlos todos en la misma cantidad. Notarás que el primer elemento de nuestra muestra, el 4, contribuyó mucho más a nuestra puntuación de 10 que el tercer elemento, y que el segundo elemento no contribuyó en absoluto. Una actualización de peso apropiada, entonces, cambiaría el primer peso mucho, el tercer peso un poco, y el segundo peso no debería cambiarse en absoluto. Después de todo, el segundo y tercer pesos podrían no estar tan mal, ¡y no queremos arreglar lo que no está roto!
+
+Al pensar en una buena manera de cambiar nuestro vector de pesos para satisfacer los deseos anteriores, resulta que simplemente usar la muestra misma hace lo que queremos; ¡cambia el primer peso mucho, el tercer peso un poco y no cambia el segundo peso en absoluto!
+
+Una visualización también puede ayudar. En la figura siguiente, $\mathbf{f}(\mathbf{x})$ es el vector de características para un punto de datos con clase positiva ($y^*$ = +1) que actualmente está mal clasificado —se encuentra en el lado equivocado del límite de decisión definido por "$\mathbf{w}$ antiguo". Al agregarlo al vector de pesos, se produce un nuevo vector de pesos que tiene un ángulo más pequeño con $\mathbf{f}(\mathbf{x})$. También desplaza el límite de decisión. En este ejemplo, ha desplazado el límite de decisión lo suficiente como para que $\mathbf{x}$ ahora se clasifique correctamente (tenga en cuenta que el error no siempre se corregirá, depende del tamaño del vector de pesos y de cuán lejos del límite se encuentre $\mathbf{f}(\mathbf{x})$ actualmente).
+
+![Clasificación incorrecta de x con w antiguo](images/linear_classifier_fig7.png){fig-align="center"}
+
+![Actualizando w](images/linear_classifier_fig8.png){fig-align="center"}
+
+![Clasificación actualizada de x](images/linear_classifier_fig9.png){fig-align="center"}
+
+## Sesgo
+
+Si intentaras implementar un perceptrón basándote en lo mencionado hasta ahora, notarás una peculiaridad particularmente inamistosa. Cualquier límite de decisión que termines dibujando cruzará el origen. Básicamente, tu perceptrón solo puede producir un límite de decisión que podría representarse mediante la función $\mathbf{w}^T\mathbf{f}(\mathbf{x}) = 0$, donde $\mathbf{w}$, $\mathbf{f}(\mathbf{x}) \in \mathbb{R}^n$. El problema es que, incluso entre los problemas donde hay un límite de decisión lineal que separa las clases positivas y negativas en los datos, ese límite puede no pasar por el origen, y queremos poder dibujar esas líneas.
+
+Para ello, modificaremos nuestras características y pesos para añadir un término de sesgo: añade una característica a tus vectores de características de muestra que sea siempre 1, y añade un peso extra para esta característica a tu vector de pesos. Hacer esto esencialmente nos permite producir un límite de decisión representable por $\mathbf{w}^T\mathbf{f}(\mathbf{x}) + b = 0$, donde $b$ es el término de sesgo ponderado (es decir, 1 \* el último peso en el vector de pesos).
+
+Geométricamente, podemos visualizar esto pensando en cómo se ve la función de activación cuando es $\mathbf{w}^T\mathbf{f}(\mathbf{x})$ y cuando hay un sesgo $\mathbf{w}^T\mathbf{f}(\mathbf{x}) + b$. Para hacerlo, necesitamos estar una dimensión más arriba que el espacio de nuestros datos caracterizados (espacio de datos etiquetados en las figuras siguientes). En todas las secciones anteriores, solo habíamos estado viendo una vista plana del espacio de datos.
+
+![Sin sesgo](images/linear_classifier_fig10.png){fig-align="center"}
+
+![Con sesgo](images/linear_classifier_fig11.png){fig-align="center"}
+
+## Ejemplo
+
+Veamos un ejemplo de cómo ejecutar el algoritmo del perceptrón paso a paso.
+
+Ejecutaremos una pasada a través de los datos con el algoritmo del perceptrón, tomando cada punto de datos en orden. Comenzaremos con el vector de pesos $[w_0, w_1, w_2] = [-1, 0, 0]$ (donde $w_0$ es el peso para nuestra característica de sesgo, que recordemos es siempre 1).
+
+**Conjunto de Entrenamiento**
+
+| \#  | $\mathbf{f}_1$ | $\mathbf{f}_2$ | $y^*$ |
+|-----|----------------|----------------|-------|
+| 1   | 1              | 1              | \-    |
+| 2   | 3              | 2              | \+    |
+| 3   | 2              | 4              | \+    |
+| 4   | 3              | 4              | \+    |
+| 5   | 2              | 3              | \-    |
+
+**Pase Único de Actualización del Perceptrón**
+
+| Paso | Pesos         | Puntuación                     | ¿Correcto? | Actualización |
+|-------------|-------------|-----------------------|-------------|-------------|
+| 1    | \[-1, 0, 0\]  | -1 \* 1 + 0 \* 1 + 0 \* 1 = -1 | sí         | ninguna       |
+| 2    | \[-1, 0, 0\]  | -1 \* 1 + 0 \* 3 + 0 \* 2 = -1 | no         | +\[1, 3, 2\]  |
+| 3    | \[0, 3, 2\]   | 0 \* 1 + 3 \* 2 + 2 \* 4 = 14  | sí         | ninguna       |
+| 4    | \[0, 3, 2\]   | 0 \* 1 + 3 \* 3 + 2 \* 4 = 17  | sí         | ninguna       |
+| 5    | \[0, 3, 2\]   | 0 \* 1 + 3 \* 2 + 2 \* 3 = 12  | no         | -\[1, 2, 3\]  |
+| 6    | \[-1, 1, -1\] |                                |            |               |
+
+Nos detendremos aquí, pero en realidad, este algoritmo se ejecutaría durante muchas más pasadas a través de los datos antes de que todos los puntos de datos se clasifiquen correctamente en una sola pasada.
+
+## Perceptrón Multiclase
+
+El perceptrón presentado anteriormente es un clasificador binario, pero podemos extenderlo para manejar múltiples clases con bastante facilidad. La principal diferencia radica en cómo configuramos los pesos y cómo los actualizamos. Para el caso binario, teníamos un vector de pesos, cuya dimensión era igual al número de características (más la característica de sesgo). Para el caso multiclase, tendremos un vector de pesos para cada clase. Así, en el caso de 3 clases, tenemos 3 vectores de pesos. Para clasificar una muestra, calculamos una puntuación para cada clase tomando el producto escalar del vector de características con cada uno de los vectores de pesos. La clase que arroje la puntuación más alta es la que elegimos como nuestra predicción.
+
+Por ejemplo, consideremos el caso de 3 clases. Sea nuestra muestra con características $\mathbf{f}(\mathbf{x}) = [-2, 3, 1]$ y nuestros pesos para las clases 0, 1 y 2 sean:
+
+$$
+\mathbf{w}_0 = \begin{bmatrix}-2 & 2 & 1\end{bmatrix}
+$$
+
+$$
+\mathbf{w}_1 = \begin{bmatrix}0 & 3 & 4\end{bmatrix}
+$$
+
+$$
+\mathbf{w}_2 = \begin{bmatrix}1 & 4 & -2\end{bmatrix}
+$$
+
+Tomando productos escalares para cada clase obtenemos las puntuaciones $s_0 = 11$, $s_1 = 13$, $s_2 = 8$. Así, predeciríamos que $\mathbf{x}$ pertenece a la clase 1.
+
+Un punto importante a tener en cuenta es que, en la implementación real, no se mantienen los pesos como estructuras separadas; generalmente se apilan para crear una matriz de pesos. De esta manera, en lugar de realizar tantos productos escalares como clases haya, se puede realizar una única multiplicación de matriz por vector. Esto tiende a ser mucho más eficiente en la práctica (porque la multiplicación de matriz por vector suele tener una implementación altamente optimizada).
+
+En nuestro caso anterior, sería:
+
+$$
+\mathbf{W} = \begin{bmatrix}
+-2 & 2 & 1 \\
+0 & 3 & 4 \\
+1 & 4 & -2
+\end{bmatrix}, \quad \mathbf{x} = \begin{bmatrix}-2 \\ 3 \\ 1\end{bmatrix}
+$$
+
+Y nuestra etiqueta sería:
+
+$$
+\arg\max (\mathbf{Wx}) = \arg\max \begin{bmatrix}11 \\ 13 \\ 8\end{bmatrix} = 1
+$$
+
+Además de la estructura de nuestros pesos, la actualización de estos también cambia cuando pasamos a un caso multiclase. Si clasificamos correctamente nuestro punto de datos, no hacemos nada, al igual que en el caso binario. Si elegimos incorrectamente, digamos que elegimos la clase $y \neq y^*$, entonces añadimos el vector de características al vector de pesos de la clase verdadera $y^*$ y restamos el vector de características del vector de pesos correspondiente a la clase predicha $y$. En nuestro ejemplo anterior, supongamos que la clase correcta era la clase 2, pero predijimos la clase 1. Ahora tomaríamos el vector de pesos correspondiente a la clase 1 y le restaríamos $\mathbf{x}$:
+
+$$
+\mathbf{w}_1 = \begin{bmatrix}0 & 3 & 4\end{bmatrix} - \begin{bmatrix}-2 & 3 & 1\end{bmatrix} = \begin{bmatrix}2 & 0 & 3\end{bmatrix}
+$$
+
+A continuación, tomamos el vector de pesos correspondiente a la clase correcta, la clase 2 en nuestro caso, y le añadimos $\mathbf{x}$:
+
+$$
+\mathbf{w}_2 = \begin{bmatrix}1 & 4 & -2\end{bmatrix} + \begin{bmatrix}-2 & 3 & 1\end{bmatrix} = \begin{bmatrix}-1 & 7 & -1\end{bmatrix}
+$$
+
+Esto equivale a "recompensar" el vector de pesos correcto, "castigar" el vector de pesos incorrecto y engañoso, y dejar en paz otros vectores de pesos. Tomando en cuenta la diferencia en los pesos y las actualizaciones de pesos, el resto del algoritmo es esencialmente el mismo: recorrer cada punto de muestra, actualizando los pesos cuando se comete un error, hasta que no se cometan más errores.
+
+Para incorporar un término de sesgo, se hace lo mismo que para el perceptrón binario: añadir una característica adicional de 1 a cada vector de características, y un peso adicional para esta característica a cada vector de pesos de clase (esto equivale a añadir una columna extra a la forma matricial).
