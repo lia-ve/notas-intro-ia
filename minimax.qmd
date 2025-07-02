@@ -4,7 +4,7 @@ El primer algoritmo de juegos de suma cero que exploraremos es **Minimax**, que 
 
 ![Juego de Pacman](images/easy-pacman.png){fig-align="center"}
 
----
+------------------------------------------------------------------------
 
 ## Valor de Estado y Utilidad Terminal
 
@@ -28,7 +28,7 @@ $$
 
 Esto establece una regla recursiva simple. Por ejemplo, el valor del hijo derecho del nodo raíz será $8$, mientras que el valor del hijo izquierdo será $6$. Al calcular estos valores, el agente puede determinar que moverse hacia la derecha es óptimo, ya que el hijo derecho tiene un valor mayor que el izquierdo.
 
----
+------------------------------------------------------------------------
 
 ## Introducción de un Fantasma Adversario
 
@@ -42,8 +42,8 @@ En el árbol de juego resultante, los nodos azules corresponden a nodos controla
 
 La presencia del fantasma cambia la jugada que Pacman considera óptima, y esta nueva jugada se determina mediante el algoritmo Minimax. En lugar de maximizar la utilidad en todos los niveles del árbol, Minimax maximiza sobre los hijos de los nodos controlados por Pacman y minimiza sobre los hijos de los nodos controlados por el fantasma. Por ejemplo:
 
-- Los nodos controlados por el fantasma tienen valores de $\min(-8, -5) = -8$ y $\min(-10, +8) = -10$, respectivamente.
-- El nodo raíz controlado por Pacman tiene un valor de $\max(-8, -10) = -8$.
+-   Los nodos controlados por el fantasma tienen valores de $\min(-8, -5) = -8$ y $\min(-10, +8) = -10$, respectivamente.
+-   El nodo raíz controlado por Pacman tiene un valor de $\max(-8, -10) = -8$.
 
 ![Árbol del juego de Pacman](images/small-game-tree.png){fig-align="center"}
 
@@ -63,36 +63,36 @@ $$
 \forall \text{estados terminales}, V(s) = \text{conocido}
 $$
 
----
+------------------------------------------------------------------------
 
 ## Implementación de Minimax
 
 En la implementación, Minimax se comporta de manera similar a la búsqueda en profundidad (DFS), calculando los valores de los nodos en el mismo orden que DFS lo haría, comenzando por el nodo terminal más a la izquierda y avanzando hacia la derecha. Más precisamente, realiza un recorrido postorden del árbol de juego. El pseudocódigo resultante para Minimax es elegante e intuitivo:
 
-----
+------------------------------------------------------------------------
 
-__function__ MINIMAX-DECISION(_state_) __returns__ _an action_  
-&emsp;__return__ arg max<sub> _a_ &Element; ACTIONS(_s_)</sub> MIN\-VALUE(RESULT(_state_, _a_))  
+**function** MINIMAX-DECISION(*state*) **returns** *an action*\
+ **return** arg max<sub> *a* ∈ ACTIONS(*s*)</sub> MIN-VALUE(RESULT(*state*, *a*))
 
----
+------------------------------------------------------------------------
 
-__function__ MAX\-VALUE(_state_) __returns__ _a utility value_  
-&emsp;__if__ TERMINAL\-TEST(_state_) __then return__ UTILITY(_state_)  
-&emsp;_v_ &larr; &minus;&infin;  
-&emsp;__for each__ _a_ __in__ ACTIONS(_state_) __do__  
-&emsp;&emsp;&emsp;_v_ &larr; MAX(_v_, MIN\-VALUE(RESULT(_state_, _a_)))  
-&emsp;__return__ _v_  
+**function** MAX-VALUE(*state*) **returns** *a utility value*\
+ **if** TERMINAL-TEST(*state*) **then return** UTILITY(*state*)\
+ *v* ← −∞\
+ **for each** *a* **in** ACTIONS(*state*) **do**\
+   *v* ← MAX(*v*, MIN-VALUE(RESULT(*state*, *a*)))\
+ **return** *v*
 
----
+------------------------------------------------------------------------
 
-__function__ MIN\-VALUE(_state_) __returns__ _a utility value_  
-&emsp;__if__ TERMINAL\-TEST(_state_) __then return__ UTILITY(_state_)  
-&emsp;_v_ &larr; &infin;  
-&emsp;__for each__ _a_ __in__ ACTIONS(_state_) __do__  
-&emsp;&emsp;&emsp;_v_ &larr; MIN(_v_, MAX\-VALUE(RESULT(_state_, _a_)))  
-&emsp;__return__ _v_  
+**function** MIN-VALUE(*state*) **returns** *a utility value*\
+ **if** TERMINAL-TEST(*state*) **then return** UTILITY(*state*)\
+ *v* ← ∞\
+ **for each** *a* **in** ACTIONS(*state*) **do**\
+   *v* ← MIN(*v*, MAX-VALUE(RESULT(*state*, *a*)))\
+ **return** *v*
 
-----
+------------------------------------------------------------------------
 
 ## Poda Alfa-Beta
 
@@ -100,45 +100,45 @@ Aunque Minimax es simple, óptimo e intuitivo, su complejidad temporal es $O(b^m
 
 La idea detrás de la poda alfa-beta es detener la evaluación de un nodo tan pronto como se determine que su valor no puede superar el valor óptimo del nodo padre. Consideremos el siguiente árbol de juego:
 
-1. Minimax primero evalúa los nodos con valores $3$, $12$ y $8$, asignando $\min(3, 12, 8) = 3$ al minimizador izquierdo.
+1.  Minimax primero evalúa los nodos con valores $3$, $12$ y $8$, asignando $\min(3, 12, 8) = 3$ al minimizador izquierdo.
 
 ![Ejemplo Alpha-Beta Parte 1](images/alphabeta-example-pt1.png){fig-align="center"}
 
-2. Luego evalúa el minimizador medio, encontrando un hijo con valor $2$. En este punto, podemos detener la evaluación de los otros hijos del minimizador medio porque sabemos que su valor será como máximo $2$. Dado que el maximizador en la raíz ya tiene un valor de $3$ del minimizador izquierdo, no importa qué valores tengan los demás hijos del minimizador medio; el maximizador elegirá el valor $3$.
+2.  Luego evalúa el minimizador medio, encontrando un hijo con valor $2$. En este punto, podemos detener la evaluación de los otros hijos del minimizador medio porque sabemos que su valor será como máximo $2$. Dado que el maximizador en la raíz ya tiene un valor de $3$ del minimizador izquierdo, no importa qué valores tengan los demás hijos del minimizador medio; el maximizador elegirá el valor $3$.
 
 ![Ejemplo Alpha-Beta Parte 2](images/alphabeta-example-pt2.png){fig-align="center"}
 
 La poda alfa-beta puede reducir el tiempo de ejecución a $O(b^{m/2})$, duplicando efectivamente la profundidad "solucionable". En la práctica, esto permite buscar al menos uno o dos niveles más profundos, lo cual es significativo porque el jugador que anticipa más movimientos tiene una ventaja competitiva.
 
-----
+------------------------------------------------------------------------
 
-__function__ ALPHA-BETA-SEARCH(_state_) __returns__ an action  
-&emsp;_v_ &larr; MAX\-VALUE(_state_, &minus;&infin;, &plus;&infin;)  
-&emsp;__return__ the _action_ in ACTIONS(_state_) with value _v_  
+**function** ALPHA-BETA-SEARCH(*state*) **returns** an action\
+ *v* ← MAX-VALUE(*state*, −∞, +∞)\
+ **return** the *action* in ACTIONS(*state*) with value *v*
 
----
+------------------------------------------------------------------------
 
-__function__ MAX\-VALUE(_state_, _&alpha;_, _&beta;_) __returns__ _a utility value_  
-&emsp;__if__ TERMINAL\-TEST(_state_) __then return__ UTILITY(_state_)  
-&emsp;_v_ &larr; &minus;&infin;  
-&emsp;__for each__ _a_ __in__ ACTIONS(_state_) __do__  
-&emsp;&emsp;&emsp;_v_ &larr; MAX(_v_, MIN\-VALUE(RESULT(_state_, _a_), _&alpha;_, _&beta;_))  
-&emsp;&emsp;&emsp;__if__ _v_ &ge; _&beta;_ __then return__ _v_  
-&emsp;&emsp;&emsp;_&alpha;_ &larr; MAX(_&alpha;_, _v_)  
-&emsp;__return__ _v_  
+**function** MAX-VALUE(*state*, *α*, *β*) **returns** *a utility value*\
+ **if** TERMINAL-TEST(*state*) **then return** UTILITY(*state*)\
+ *v* ← −∞\
+ **for each** *a* **in** ACTIONS(*state*) **do**\
+   *v* ← MAX(*v*, MIN-VALUE(RESULT(*state*, *a*), *α*, *β*))\
+   **if** *v* ≥ *β* **then return** *v*\
+   *α* ← MAX(*α*, *v*)\
+ **return** *v*
 
----
+------------------------------------------------------------------------
 
-__function__ MIN\-VALUE(_state_, _&alpha;_, _&beta;_) __returns__ _a utility value_  
-&emsp;__if__ TERMINAL\-TEST(_state_) __then return__ UTILITY(_state_)  
-&emsp;_v_ &larr; &plus;&infin;  
-&emsp;__for each__ _a_ __in__ ACTIONS(_state_) __do__  
-&emsp;&emsp;&emsp;_v_ &larr; MIN(_v_, MAX\-VALUE(RESULT(_state_, _a_), _&alpha;_, _&beta;_))  
-&emsp;&emsp;&emsp;__if__ _v_ &le; _&alpha;_ __then return__ _v_  
-&emsp;&emsp;&emsp;_&beta;_ &larr; MIN(_&beta;_, _v_)  
-&emsp;__return__ _v_  
+**function** MIN-VALUE(*state*, *α*, *β*) **returns** *a utility value*\
+ **if** TERMINAL-TEST(*state*) **then return** UTILITY(*state*)\
+ *v* ← +∞\
+ **for each** *a* **in** ACTIONS(*state*) **do**\
+   *v* ← MIN(*v*, MAX-VALUE(RESULT(*state*, *a*), *α*, *β*))\
+   **if** *v* ≤ *α* **then return** *v*\
+   *β* ← MIN(*β*, *v*)\
+ **return** *v*
 
-----
+------------------------------------------------------------------------
 
 ## Funciones de Evaluación
 
@@ -155,7 +155,10 @@ Cada $f_i(s)$ corresponde a una característica extraída del estado $s$, y cada
 Un ejemplo de función de evaluación podría ser:
 
 $$
-Eval(s) = 2 \cdot \text{reyes_agente}(s) + \text{peones_agente}(s) - 2 \cdot \text{reyes_oponente}(s) - \text{peones_oponente}(s)
+\begin{split}
+Eval(s) = 2 \cdot \text{reyes-agente}(s) + \text{peones-agente}(s) \\
+- 2 \cdot \text{reyes-oponente}(s) - \text{peones-oponente}(s)
+\end{split}
 $$
 
 El diseño de funciones de evaluación es flexible y puede incluir funciones no lineales, como redes neuronales, en aplicaciones de aprendizaje por refuerzo. Lo más importante es que la función asigne puntajes más altos a posiciones mejores de manera consistente.
