@@ -27,6 +27,18 @@ book:
         - minimax.qmd
     - summary.qmd
     - references.qmd
+    - part: "Aprendizaje Automatico"
+      chapters:
+        - aprendizaje.qmd
+        - naive-bayes.qmd
+        - perceptron.qmd
+        - perceptron-binario.qmd
+        - regresion-lineal.qmd
+        - optimizacion.qmd
+        - regresion-logistica.qmd
+        - logistica-multiclase.qmd
+        - redes-neuronales.qmd
+
 
 bibliography: references.bib
 

@@ -1,0 +1,17 @@
+# Aprendizaje Automático
+
+En las secciones anteriores de este curso, hemos explorado varios tipos de modelos que nos permiten razonar bajo incertidumbre. Hasta ahora, hemos asumido que los modelos probabilísticos con los que trabajamos se daban por sentados, y los métodos por los cuales se generaban las tablas de probabilidad subyacentes se abstraían. Comenzaremos a romper esta barrera de abstracción a medida que nos adentramos en el **aprendizaje automático** (Machine Learning), un amplio campo de la informática que se ocupa de construir y/o aprender los parámetros de un modelo específico a partir de datos.
+
+Existen numerosos algoritmos de aprendizaje automático que abordan diferentes tipos de problemas y datos, clasificados según las tareas que buscan lograr y los tipos de datos con los que trabajan. Dos subgrupos principales de algoritmos de aprendizaje automático son los **algoritmos de aprendizaje supervisado** y los **algoritmos de aprendizaje no supervisado**. Los algoritmos de aprendizaje supervisado infieren una relación entre los datos de entrada y los datos de salida correspondientes para predecir resultados para nuevos datos de entrada nunca antes vistos. Por otro lado, los algoritmos de aprendizaje no supervisado trabajan con datos de entrada que no tienen datos de salida correspondientes y, por lo tanto, se ocupan de reconocer estructuras inherentes entre o dentro de los puntos de datos, agrupándolos y/o procesándolos en consecuencia. En esta clase, los algoritmos que discutiremos se limitarán a tareas de aprendizaje supervisado.
+
+![(a) Entrenamiento](images/train.png){fig-align="center"}
+
+![(b) Validación](images/validation.png){fig-align="center"}
+
+![](images/validation.png){fig-align="center"}
+
+![(c) Prueba](images/test.png){fig-align="center"}
+
+Una vez que tienes un conjunto de datos listo para el aprendizaje, el proceso de aprendizaje automático generalmente implica dividir tu conjunto de datos en tres subconjuntos distintos. El primero, los **datos de entrenamiento**, se utiliza para generar un modelo que mapea las entradas a las salidas. Luego, los **datos de validación** (también conocidos como datos de **reserva** o de **desarrollo**) se utilizan para medir el rendimiento de tu modelo haciendo predicciones sobre las entradas y generando una puntuación de precisión. Si tu modelo no funciona tan bien como te gustaría, siempre puedes volver a entrenarlo, ya sea ajustando valores especiales específicos del modelo llamados **hiperparámetros** o utilizando un algoritmo de aprendizaje diferente, hasta que estés satisfecho con los resultados. Finalmente, utiliza tu modelo para hacer predicciones en el tercer y último subconjunto de tus datos, el **conjunto de prueba**. El conjunto de prueba es la parte de tus datos que nunca ha sido vista por tu agente hasta el final del desarrollo, y es el equivalente a un "examen final" para medir el rendimiento con datos del mundo real.
+
+A continuación, cubriremos algunos algoritmos fundamentales de aprendizaje automático, como Naive Bayes, Regresión Lineal, Regresión Logística y el algoritmo Perceptron.
